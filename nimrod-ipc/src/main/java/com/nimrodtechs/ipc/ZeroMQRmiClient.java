@@ -1,4 +1,4 @@
-package com.nimrodtechs.rmi.zmq;
+package com.nimrodtechs.ipc;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,8 +41,8 @@ import com.nimrodtechs.serialization.NimrodObjectSerializer;
  * @author andy
  *
  */
-public class ZeroMQRmiClient extends ZeroMQRmiCommon {
-    private static Logger logger = LoggerFactory.getLogger("ZeroMQRmiClient");
+public class ZeroMQRmiClient extends ZeroMQCommon {
+    private static Logger logger = LoggerFactory.getLogger(ZeroMQRmiClient.class);
     private ZeroMQRmiClient instance;
     private boolean connected = false;
     private Date connectedMadeAtDateTime = null;
@@ -54,13 +54,12 @@ public class ZeroMQRmiClient extends ZeroMQRmiCommon {
     private static AtomicInteger instanceId = new AtomicInteger(0);
     private int thisInstanceId = instanceId.getAndIncrement();
     private AtomicLong threadRequestId = new AtomicLong(1);
-    private String internalSocketName = INTERNAL_SOCKET_NAME_PREFIX + "-client-" + thisInstanceId;
+    private String internalSocketName;
     private QueueTask queueHandler;
     private Thread queueHandlerThread;
-    private String zmqClientName = "zmqClient";
-
-    public void setZmqClientName(String zmqClientName) {
-        this.zmqClientName = zmqClientName;
+    
+    protected String getDefaultInstanceName() {
+        return "zmqClient";
     }
 
     private String zmqClientPumpThreadName;
@@ -163,11 +162,11 @@ public class ZeroMQRmiClient extends ZeroMQRmiCommon {
         super.initialize();
 
         logger.info("ZMQ Version : " + ZMQ.getFullVersion());
-        
-        zmqClientPumpThreadName = PUMP_PREFIX + zmqClientName + "-" + thisInstanceId;
-        heartBeatThreadName = HEARTBEAT_PREFIX + zmqClientName + "-" + thisInstanceId;
+        internalSocketName = INTERNAL_SOCKET_NAME_PREFIX + "-"+getInstanceName()+"-" + thisInstanceId;
+        zmqClientPumpThreadName = PUMP_PREFIX + getInstanceName() + "-" + thisInstanceId;
+        heartBeatThreadName = HEARTBEAT_PREFIX + getInstanceName() + "-" + thisInstanceId;
 
-        externalSocketURL.add(clientRmiSocket);
+        externalSocketURL.add(clientSocket);
         initializeQueue();
         initializeHeartbeat();
         //Indicates that subsequent calls to initialize is NOT the first time
@@ -245,8 +244,8 @@ public class ZeroMQRmiClient extends ZeroMQRmiCommon {
                 // Set linger to 0 is very important otherwise sockets hang
                 // around using up OS file descriptors
                 backend.setLinger(0);
-                backend.connect(clientRmiSocket);
-                logger.info("Connecting to " + clientRmiSocket);
+                backend.connect(clientSocket);
+                logger.info("Connecting to " + clientSocket);
                 // Set inproc pool and threads starting thread id back to 1
                 if (inprocPool == null) {
                     inprocThreadId.set(1);
@@ -331,7 +330,7 @@ public class ZeroMQRmiClient extends ZeroMQRmiCommon {
                             // sockets hang around
                             // using up OS file descriptors
                             backend.setLinger(0);
-                            backend.connect(clientRmiSocket);
+                            backend.connect(clientSocket);
                             // logger.info("Re-Connecting to " +
                             // externalSocketNames.get(currentExternalSocketEntry));
                             this.poller.register(backend, ZMQ.Poller.POLLIN);
@@ -626,7 +625,7 @@ public class ZeroMQRmiClient extends ZeroMQRmiCommon {
         public void run() {
             inprocConnection.lock.lock();
             long id = inprocThreadId.getAndIncrement();
-            String identity = "inproc" + thisInstanceId + "-" + id;
+            String identity = INPROC_PREFIX+getInstanceName()+"-" + thisInstanceId + "-" + id;
             Thread.currentThread().setName(identity);
             inprocConnection.name = identity;
             // logger.info("Started thread "+identity);

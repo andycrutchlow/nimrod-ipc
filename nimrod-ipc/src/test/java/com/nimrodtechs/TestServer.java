@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.nimrodtechs.annotations.ExposedMethod;
 import com.nimrodtechs.annotations.ExposedServiceName;
-import com.nimrodtechs.rmi.zmq.ZeroMQRmiServer;
+import com.nimrodtechs.ipc.ZeroMQRmiServer;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
 import com.nimrodtechs.serialization.kryo.KryoSerializer;
 
@@ -29,7 +29,8 @@ public class TestServer {
         //Add an instance of this TestServer class as a service and its 2 associated exposed methods
         server.addExposedService(new TestServer());
         //Set the external socket that this rmi server is accessible on..default to unix domain socket located in tmp directory
-        server.setServerRmiSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/rmiServerSocket"));
+        server.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestServerSocket.rmi"));
+        server.setInstanceName("testserver");
         try {
             //Initialize
             server.initialize();

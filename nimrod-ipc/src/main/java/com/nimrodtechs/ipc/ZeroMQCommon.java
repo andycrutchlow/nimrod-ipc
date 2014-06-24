@@ -1,9 +1,10 @@
-package com.nimrodtechs.rmi.zmq;
+package com.nimrodtechs.ipc;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,8 +17,8 @@ import org.zeromq.ZMQ.Socket;
 import com.nimrodtechs.serialization.NimrodObjectSerializationInterface;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
 
-public class ZeroMQRmiCommon {
-	private static Logger logger = LoggerFactory.getLogger("ZeroMQRmiCommon");
+public abstract class ZeroMQCommon {
+	private static Logger logger = LoggerFactory.getLogger(ZeroMQCommon.class);
 
 	protected static Context context;
 	protected final static String INTERNAL_SOCKET_NAME_PREFIX = "inproc://inproc";
@@ -28,7 +29,9 @@ public class ZeroMQRmiCommon {
 	protected static final String PUMP_PREFIX = "zmqPump-";
 	protected static final String HEARTBEAT_PREFIX = "zmqHrtb-";
 	protected static final String WORKER_PREFIX = "zmqWorker-";
-	
+	protected static final String INPROC_PREFIX = "zmqInproc-";
+	protected static final String PUBLISHER_PREFIX = "zmqPub-";
+	protected static final String SUBSCRIBER_PREFIX = "zmqSub-";
 	
 	protected static final byte[] ZERO_AS_BYTES = "0".getBytes();
 	protected static final byte[] ONE_AS_BYTES = "1".getBytes();
@@ -38,33 +41,64 @@ public class ZeroMQRmiCommon {
 	protected final static byte[] INTERRUPT_CALLS_IN_PROGRESS_OPERATION = "~2".getBytes();
 	protected static final byte[] RESET_OPERATION = "~3".getBytes();
 	
+	private static Map<String ,ZeroMQCommon> instances = new HashMap<String ,ZeroMQCommon>();
 	
 	protected static int TIMEOUT = 2000;
 	protected static int RETRY = 3;
 	protected List<String> externalSocketURL = new ArrayList<String>();
 	protected int currentExternalSocketEntry = 0;
 
-	protected String serverRmiSocket = null;
-	protected String serverRmiSocketLongVersion = null;
-	protected String clientRmiSocket = null;
+	/**
+	 * In the context of a rmi client/server then server socket is the listening
+	 * side that clients connect to and subsequently send requests in on.
+	 * In the context of pubsub then server socket is the socket that messages will be
+	 * published on and that subscribers connect to to receive messages on. 
+	 */
+	protected String serverSocket = null;
+	protected String serverSocketLongVersion = null;
+	protected String clientSocket = null;
 	protected  Socket frontend;
 
 	protected  Socket backend;
 	
 	protected NimrodObjectSerializationInterface defaultSerializer;
-	protected String defaultSerializerId;
+	protected static String defaultSerializerId;
 	
+	protected String instanceName = null;
+	public String getInstanceName() {
+	    if(instanceName == null)
+	        instanceName = getDefaultInstanceName();
+        return instanceName;
+    }
+    public void setInstanceName(String instanceName) {
+        this.instanceName = instanceName;
+        instances.put(instanceName, this);
+    }
+    protected static ZeroMQCommon getInstance(String name)
+    {
+        return instances.get(name);
+    }
+    protected abstract String getDefaultInstanceName();
+    
+    /**
+     * manyToOne = true means the socket will be written to by many (this process is one of them) and read by one (another process).
+     */
+    protected boolean manyToOne = false;
+    public void setManyToOne(boolean manyToOne) {
+        this.manyToOne = manyToOne;
+    }
+    
 	public void initialize() throws Exception {
 		if(context != null) {
 			throw new Exception("Already initialized");
 		}
 		//If externalSocketURL's have not already been injected then see if available on command line
-		if(serverRmiSocket == null) {
+		if(serverSocket == null) {
 		    String sockName = System.getProperty("nimrod.rpc.serverRmiSocket");
 			if(sockName == null){
 				throw new Exception("Missing serverRmiSocket configuration");
 			} else {
-			    setServerRmiSocket(sockName);
+			    setServerSocket(sockName);
 			}
 			
 		}
@@ -80,37 +114,38 @@ public class ZeroMQRmiCommon {
 		context = ZMQ.context(1);
 		logger.info("created ZMQ context Version : "+ZMQ.getFullVersion());
 	}
-    public void setServerRmiSocket(String sockName) {
+	
+    public void setServerSocket(String sockName) {
         if (sockName != null) {
-            clientRmiSocket = sockName;
-            if (sockName.startsWith("tcp://")) {
+            clientSocket = sockName;
+            if (sockName.startsWith("tcp://") && manyToOne == false) {
                 String s1 = sockName.replace("tcp://", "");
                 String[] s2 = s1.split(":");
                 if (s2.length > 1) {
                     if (s2[0].equals("*")) {
                         try {
-                            serverRmiSocketLongVersion = "tcp://" + InetAddress.getLocalHost().getHostName() + ":" + s2[1];
-                            serverRmiSocket = sockName;
+                            serverSocketLongVersion = "tcp://" + InetAddress.getLocalHost().getHostName() + ":" + s2[1];
+                            serverSocket = sockName;
                         } catch (UnknownHostException e) {
-                            this.serverRmiSocket = sockName;
+                            this.serverSocket = sockName;
                         }
                     } else {
-                        serverRmiSocketLongVersion = sockName;
-                        serverRmiSocket = "tcp://*:" + s2[1];
+                        serverSocketLongVersion = sockName;
+                        serverSocket = "tcp://*:" + s2[1];
                     }
                 } else {
-                    this.serverRmiSocket = sockName;
+                    this.serverSocket = sockName;
                 }
             } else {
-                this.serverRmiSocket = sockName;
+                this.serverSocket = sockName;
             }
-            if (serverRmiSocketLongVersion == null)
-                serverRmiSocketLongVersion = serverRmiSocket;
+            if (serverSocketLongVersion == null)
+                serverSocketLongVersion = serverSocket;
         }
     }
 
-    public String getServerRmiListenSocket() {
-        return serverRmiSocket;
+    public String getServerSocket() {
+        return serverSocket;
     }
 	
     /**

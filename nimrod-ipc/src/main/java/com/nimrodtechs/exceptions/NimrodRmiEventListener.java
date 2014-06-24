@@ -1,6 +1,6 @@
 package com.nimrodtechs.exceptions;
 
-import com.nimrodtechs.rmi.zmq.ZeroMQRmiClient;
+import com.nimrodtechs.ipc.ZeroMQRmiClient;
 
 
 

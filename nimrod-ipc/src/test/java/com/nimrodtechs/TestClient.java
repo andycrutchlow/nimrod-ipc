@@ -3,7 +3,7 @@ package com.nimrodtechs;
 import ch.qos.logback.classic.Logger;
 
 import com.nimrodtechs.exceptions.NimrodRmiNotConnectedException;
-import com.nimrodtechs.rmi.zmq.ZeroMQRmiClient;
+import com.nimrodtechs.ipc.ZeroMQRmiClient;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
 import com.nimrodtechs.serialization.kryo.KryoSerializer;
 
@@ -22,8 +22,8 @@ public class TestClient {
         //Configure the general serializer by adding a kryo serializer
         NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
         testServerConnection = new ZeroMQRmiClient();
-        testServerConnection.setZmqClientName("TestServerConnection");
-        testServerConnection.setServerRmiSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/rmiServerSocket"));
+        testServerConnection.setInstanceName("TestServerConnection");
+        testServerConnection.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/rmiServerSocket"));
         try {
             testServerConnection.initialize();
             while(true) {

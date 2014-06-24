@@ -1,4 +1,4 @@
-package com.nimrodtechs.rmi.zmq;
+package com.nimrodtechs.ipc;
 
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
@@ -21,8 +21,8 @@ import com.nimrodtechs.annotations.ExposedServiceName;
 import com.nimrodtechs.exceptions.NimrodRmiNotConnectedException;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
 
-public class ZeroMQRmiServer extends ZeroMQRmiCommon {
-    final static Logger logger = LoggerFactory.getLogger("ZeroMQRmiServer");
+public class ZeroMQRmiServer extends ZeroMQCommon {
+    final static Logger logger = LoggerFactory.getLogger(ZeroMQRmiServer.class);
     private boolean enabled = false;
 
     public boolean isEnabled() {
@@ -36,13 +36,16 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
     private static AtomicInteger instanceId = new AtomicInteger(0);
     private int thisInstanceId = instanceId.getAndIncrement();
 
-    private String internalSocketName = INTERNAL_SOCKET_NAME_PREFIX + "-server-" + thisInstanceId;
+    private String internalSocketName;
 
+    protected String getDefaultInstanceName() {
+        return "zmqServer";
+    }
     /**
      * This is assignable or will default to available processors / 2.
      */
     private int workerThreadPoolInitialSize = -1;
-    private String workerPrefix = WORKER_PREFIX + thisInstanceId + "-";
+    private String workerPrefix;
 
     public void setWorkerThreadPoolSize(int workerThreadPoolSize) {
         this.workerThreadPoolInitialSize = workerThreadPoolSize;
@@ -126,9 +129,11 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
             workerSafetyMargin = 1;
         }
 
+        internalSocketName = INTERNAL_SOCKET_NAME_PREFIX + "-"+getInstanceName() + "-" + thisInstanceId;
+        workerPrefix = WORKER_PREFIX +getInstanceName()+ "-" + thisInstanceId + "-";
         // Start a dedicated thread to manage the inbound and outbound queues
         queueHandler = new QueueHandlerThread();
-        queueHandlerThread = new Thread(queueHandler, "zmqServerPump" + thisInstanceId);
+        queueHandlerThread = new Thread(queueHandler, PUMP_PREFIX+getInstanceName()+ "-" + thisInstanceId);
         queueHandlerThread.start();
         // Delay for a short time to allow queueHandler to acquire lock
         try {
@@ -164,9 +169,9 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
             // The external interface/socket into this process
             try {
                 frontend = context.socket(ZMQ.ROUTER);
-                frontend.bind(getServerRmiListenSocket());
+                frontend.bind(getServerSocket());
             } catch (Exception e) {
-                logger.error("serverside" + thisInstanceId + " rmi unable to initialise using " + getServerRmiListenSocket(), e);
+                logger.error("serverside" + thisInstanceId + " rmi unable to initialise using " + getServerSocket(), e);
                 // This is a serious error .. need to propagate back to main
                 // server
                 frontend = null;
@@ -214,6 +219,7 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
                         if (frontend.hasReceiveMore())
                             firstDataFrame = frontend.recv(0);
 
+                        //See if this is a HEARTBEAT message
                         if (threadRequestIdFrame != null && threadRequestIdFrame.length > 0 && new String(threadRequestIdFrame).startsWith(HEARTBEAT_PREFIX)) {
                             // Do not respond to heartbeats until overall
                             // service is switched on
@@ -221,8 +227,7 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
                                 logger.info("Heartbeat received..but service not enabled yet");
                                 continue;
                             }
-                            // Its a heartbeat from a client so return
-                            // immediately
+                            // Its a heartbeat from a client and this process is ready so return immediately
                             frontend.send(returnAddressPart1, ZMQ.SNDMORE);
                             frontend.send(returnAddressPart2, ZMQ.SNDMORE);
                             frontend.send(EMPTY_FRAME, ZMQ.SNDMORE);
@@ -235,6 +240,7 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
                             frontend.send(firstDataFrame, 0);
                             continue;
                         }
+                        
                         // Get first available worker
                         int workerId = getFreeWorker();
 
@@ -242,8 +248,7 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
 
                         // At this point if there is no worker thread
                         // available..either because they are all busy OR
-                        // because we
-                        // are in the process of shutting down then reply
+                        // because we are in the process of shutting down ..so reply
                         // immediately back to caller with error
                         if (workerId == -1) {
                             frontend.send(returnAddressPart1, ZMQ.SNDMORE);
@@ -265,9 +270,7 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
                                 frontend.send(EMPTY_FRAME, ZMQ.SNDMORE);
                                 frontend.send(threadRequestIdFrame != null ? threadRequestIdFrame : "UNKNOWN".getBytes(), ZMQ.SNDMORE);
                                 frontend.send(ZERO_AS_BYTES, ZMQ.SNDMORE);
-                                // For now just pass back exception name...add
-                                // more
-                                // sophistication later...
+                                // For now just pass back exception name...add more sophistication later...
                                 frontend.send(NimrodRmiNotConnectedException.class.getName().getBytes(), 0);
                             }
                             continue;
@@ -275,32 +278,23 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
                         // At this point we are forwarding on a good inbound
                         // request to a worker thread for processing.
                         // Add/Prefix the destination worker threads address
-                        // logger.error("7");
                         backend.send(workAddr.getBytes(), ZMQ.SNDMORE);
-                        // logger.error("8");
                         backend.send(EMPTY_FRAME, ZMQ.SNDMORE);
-                        // logger.error("9");
                         safeZmqSend(backend, returnAddressPart1, ZMQ.SNDMORE);
-                        // logger.error("10");
                         safeZmqSend(backend, returnAddressPart2, ZMQ.SNDMORE);
-                        // logger.error("11");
                         backend.send(EMPTY_FRAME, ZMQ.SNDMORE);
-                        // logger.error("12");
                         safeZmqSend(backend, threadRequestIdFrame, ZMQ.SNDMORE);
                         if (frontend.hasReceiveMore()) {
-                            // logger.error("13");
-                            safeZmqSend(backend, firstDataFrame, ZMQ.SNDMORE);
+                             safeZmqSend(backend, firstDataFrame, ZMQ.SNDMORE);
                             boolean more = true;
                             while (more) {
                                 byte[] nextFrame = frontend.recv(0);
 
                                 more = frontend.hasReceiveMore();
-                                // logger.error("14");
                                 safeZmqSend(backend, nextFrame, more ? ZMQ.SNDMORE : 0);
                             }
 
                         } else {
-                            // logger.error("15");
                             safeZmqSend(backend, firstDataFrame, 0);
                             // logger.info(" Client msg recvd and sent to " +
                             // workAddr);
@@ -355,30 +349,22 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
                             continue;
                         }
                         // If we are here then we are on an actual outward bound
-                        // response so method response data to forward back to
-                        // external
-                        // waiting callers..in which case dataFrame1 actually
-                        // contains first part of return address and needs to be
+                        // response ...so method response data is available to forward back to external waiting callers.
+                        // DataFrame1 actually contains first part of return address and needs to be
                         // remembered.
                         byte[] returnAddressPart1 = dataFrame1;
                         returnAddressPart2 = backend.recv(0);
                         empty = backend.recv(0);
-                        // logger.error("16");
                         safeZmqSend(frontend, returnAddressPart1, ZMQ.SNDMORE);
-                        // logger.error("17");
                         safeZmqSend(frontend, returnAddressPart2, ZMQ.SNDMORE);
-                        // logger.error("18");
                         frontend.send(EMPTY_FRAME, ZMQ.SNDMORE);
-                        // The rest is the actual data/parameters. There must be
-                        // at least 1
-                        // more frame so loop forwarding on all subsequent
+                        // The rest is are the actual data/parameters. There must be
+                        // at least 1 more frame so loop forwarding on all subsequent
                         // frames to wa
                         boolean more = true;
                         while (more) {
                             byte[] nextFrame = backend.recv(0);
-
                             more = backend.hasReceiveMore();
-                            // logger.error("19");
                             safeZmqSend(frontend, nextFrame, more ? ZMQ.SNDMORE : 0);
                         }
                     } catch (Exception e) {
@@ -635,17 +621,13 @@ public class ZeroMQRmiServer extends ZeroMQRmiCommon {
                     // responses are in fact null
                     try {
                         safeZmqSend(worker, returnAddressPart1, ZMQ.SNDMORE);
-                        // logger.error("21");
                         safeZmqSend(worker, returnAddressPart2, ZMQ.SNDMORE);
-                        // logger.error("22");
                         worker.send(empty, ZMQ.SNDMORE);
-                        // logger.error("23");
                         safeZmqSend(worker, threadRequestIdBytes, ZMQ.SNDMORE);
                         // logger.info(Thread.currentThread().getName()+
                         // " response ="+new String(serviceNameBytes ));
                         for (int j = 0; j < responseList.size(); j++) {
-                            // logger.error("24");
-                            safeZmqSend(worker, responseList.get(j), j < responseList.size() - 1 ? ZMQ.SNDMORE : 0);
+                             safeZmqSend(worker, responseList.get(j), j < responseList.size() - 1 ? ZMQ.SNDMORE : 0);
 
                         }
                     } catch (Exception e) {
