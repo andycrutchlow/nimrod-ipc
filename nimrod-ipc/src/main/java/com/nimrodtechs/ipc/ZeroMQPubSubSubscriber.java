@@ -16,10 +16,10 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
 
-import com.nimrodtechs.ipc.queue.ConflatingQueueExecutor;
+import com.nimrodtechs.ipc.queue.ConflatingExecutor;
 import com.nimrodtechs.ipc.queue.MessageProcessorEntry;
 import com.nimrodtechs.ipc.queue.QueueExecutor;
-import com.nimrodtechs.ipc.queue.SequentialQueueExecutor;
+import com.nimrodtechs.ipc.queue.SequentialExecutor;
 
 public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
 
@@ -39,7 +39,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
     protected QueueExecutor sequentialExecutor = null;
     public QueueExecutor getSequentialExecutor() {
         if(sequentialExecutor == null) {
-            sequentialExecutor = new SequentialQueueExecutor();
+            sequentialExecutor = new SequentialExecutor();
             sequentialExecutor.setThreadNamePrefix(instanceName);
             sequentialExecutor.initialize();
         }
@@ -48,7 +48,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
     protected QueueExecutor conflatingExecutor = null;
     public QueueExecutor getConflatingExecutor() {
         if(conflatingExecutor == null) {
-            conflatingExecutor = new ConflatingQueueExecutor();
+            conflatingExecutor = new ConflatingExecutor();
             conflatingExecutor.setThreadNamePrefix(instanceName);
             conflatingExecutor.initialize();
         }

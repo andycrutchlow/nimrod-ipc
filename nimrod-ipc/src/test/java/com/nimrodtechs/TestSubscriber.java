@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.nimrodtechs.ipc.MessageReceiverInterface;
 import com.nimrodtechs.ipc.ZeroMQPubSubSubscriber;
+import com.nimrodtechs.ipc.queue.QueueExecutor;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
 import com.nimrodtechs.serialization.kryo.KryoSerializer;
 
@@ -28,7 +29,7 @@ public class TestSubscriber implements MessageReceiverInterface {
         subscriber.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestPublisherSocket.pubsub"));
         try {
             subscriber.initialize();
-            subscriber.subscribe("testsubject", new TestSubscriber(), String.class);
+            subscriber.subscribe("testsubject", new TestSubscriber(), String.class,QueueExecutor.CONFLATING_QUEUE);
             subscriber.subscribe("testsubject2", new TestSubscriber(), String.class);
         } catch (Exception e) {
             // TODO Auto-generated catch block
