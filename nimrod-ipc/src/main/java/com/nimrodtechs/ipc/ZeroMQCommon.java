@@ -14,6 +14,7 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 
+import com.nimrodtechs.exceptions.NimrodPubSubException;
 import com.nimrodtechs.serialization.NimrodObjectSerializationInterface;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
 
@@ -32,6 +33,8 @@ public abstract class ZeroMQCommon {
 	protected static final String INPROC_PREFIX = "zmqInproc-";
 	protected static final String PUBLISHER_PREFIX = "zmqPub-";
 	protected static final String SUBSCRIBER_PREFIX = "zmqSub-";
+	
+	protected static final String AGENT_SUBJECT_PREFIX = "zmq.agent.";
 	
 	protected static final byte[] ZERO_AS_BYTES = "0".getBytes();
 	protected static final byte[] ONE_AS_BYTES = "1".getBytes();
@@ -84,13 +87,31 @@ public abstract class ZeroMQCommon {
      * manyToOne = true means the socket will be written to by many (this process is one of them) and read by one (another process).
      */
     protected boolean manyToOne = false;
-    public void setManyToOne(boolean manyToOne) {
+    public void setManyToOne(boolean manyToOne) throws Exception {
+        if(this instanceof ZeroMQPubSubSubscriber == false && this instanceof ZeroMQPubSubPublisher == false)
+            throw new NimrodPubSubException("setManyToOne only applicable for ZeroMQPubSubSubscriber or ZeroMQPubSubPublisher");
         this.manyToOne = manyToOne;
     }
     
-	public void initialize() throws Exception {
+    protected static String zeroMQAgentInboundSocketUrl = System.getProperty("zeroMQAgentInboundSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQAgentInboundSocketUrl.pubsub");
+	public static String getZeroMQAgentInboundSocketUrl() {
+        return zeroMQAgentInboundSocketUrl;
+    }
+    public static void setZeroMQAgentInboundSocketUrl(String zeroMQAgentInboundSocketUrl) {
+        ZeroMQCommon.zeroMQAgentInboundSocketUrl = zeroMQAgentInboundSocketUrl;
+    }
+    protected static String zeroMQAgentOutboundSocketUrl = System.getProperty("zeroMQAgentOutboundSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQAgentOutboundSocketUrl.pubsub");
+    public static String getZeroMQAgentOutboundSocketUrl() {
+        return zeroMQAgentOutboundSocketUrl;
+    }
+    public static void setZeroMQAgentOutboundSocketUrl(String zeroMQAgentOutboundSocketUrl) {
+        ZeroMQCommon.zeroMQAgentOutboundSocketUrl = zeroMQAgentOutboundSocketUrl;
+    }
+    private ZeroMQPubSubPublisher agentPublisher;
+    
+    public void initialize() throws Exception {
 		if(context != null) {
-			throw new Exception("Already initialized");
+		    logger.info("Already initialized - ignored.");
 		}
 		//If externalSocketURL's have not already been injected then see if available on command line
 		if(serverSocket == null) {
@@ -164,4 +185,33 @@ public abstract class ZeroMQCommon {
         else
             return false;
     }
+    protected void initializeAgentSubscriber() {
+//        agentPublisher = new ZeroMQPubSubPublisher();
+//        agentPublisher.setServerSocket(getZeroMQAgentOutboundSocketUrl());
+//        agentPublisher.setInstanceName("agentOut");
+//        try {
+//            agentPublisher.setManyToOne(true);
+//            agentPublisher.initialize();
+//        } catch (Exception e) {
+//            logger.error("initializeAgentOutboundSocket : failed",e);
+//        }
+    }
+    
+    protected void initializeAgentPublisher() {
+        agentPublisher = new ZeroMQPubSubPublisher();
+        agentPublisher.setServerSocket(getZeroMQAgentInboundSocketUrl());
+        agentPublisher.setInstanceName("agentPublisher");
+        try {
+            agentPublisher.setManyToOne(true);
+            agentPublisher.initialize();
+        } catch (Exception e) {
+            logger.error("initializeAgentInboundSocket : failed",e);
+        }
+    }
+    
+    protected void agentPublish(String subject, String message) {
+        agentPublisher.publish(subject, message);
+    }
+    
+    
 }
