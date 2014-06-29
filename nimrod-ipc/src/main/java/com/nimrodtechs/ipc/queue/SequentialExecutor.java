@@ -11,7 +11,7 @@ import com.nimrodtechs.ipc.MessageReceiverInterface;
  * event there is a backlog... or delegate to a new thread if there is no
  * current thread for the subject. Note : subject is the unit of workflow
  * control. Actual Subject is the actual subject of message. E.g. subject might
- * be xs.rate* i.e. a wildcard, actual subject might be xs.rate.EUR.USD.SPOT or
+ * be aa.bb* i.e. a wildcard, actual subject might be aa.bb.dd.ee
  * 
  * @author andy
  *

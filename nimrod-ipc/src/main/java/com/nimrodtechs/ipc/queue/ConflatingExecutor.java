@@ -10,6 +10,8 @@ import com.nimrodtechs.ipc.MessageReceiverInterface;
  * on and the latest arrived. Every message for same subject gets process
  * sequentially by same thread in the event there is a backlog... or delegate to
  * a new thread if there is no current thread for the subject.
+ * Note : a wildcard subscription will be processed in one queue therefore will be subject to conflation, which might not be what
+ * you actually want.
  * 
  * @author andy
  *
