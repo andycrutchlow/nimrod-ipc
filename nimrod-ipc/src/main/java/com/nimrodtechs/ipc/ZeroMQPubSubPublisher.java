@@ -1,11 +1,9 @@
 package com.nimrodtechs.ipc;
 
-import java.io.ObjectInputStream.GetField;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -37,7 +35,6 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
     private static int alertLevel = queueSize / 10;
 
     private boolean keepRunning = true;
-    private ConcurrentHashMap<String, byte[]> lastValueCache = new ConcurrentHashMap<String, byte[]>();
 
     @Override
     protected String getDefaultInstanceName() {
@@ -57,6 +54,11 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
             publisherThread.start();
             setupCondition.await();
             Thread.sleep(100);
+            initializeAgent();
+            if(getInstanceName() != null && getInstanceName().equals("agentPublisher") == false &&  getInstanceName().equals("agentSubscriber") == false && agentSubscriber != null) {
+                agentSubscriber.subscribe(AGENT_SUBJECT_PREFIX+INITIAL_VALUES_SUFFIX, this, String.class);
+            }
+            
             logger.info(getInstanceName() + " initialized.");
         } catch (InterruptedException ie) {
 
@@ -69,6 +71,7 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
 
     public void dispose()
     {
+        super.dispose();
         if ( queue.remainingCapacity()  < queueSize  )
         {
             try
@@ -125,7 +128,7 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
                 messageAsBytesWithTimestamp = insertLong(messageAsBytes,System.nanoTime());
             publishRaw(subject, messageAsBytesWithTimestamp);
             //Don't store initial value publish messages
-            if(subject.startsWith("control.") == false)
+            if(subject.startsWith(AGENT_SUBJECT_PREFIX) == false)
                 lastValueCache.put(subject,messageAsBytesWithTimestamp);
 
         }

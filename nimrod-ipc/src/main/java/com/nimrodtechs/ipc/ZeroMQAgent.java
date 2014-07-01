@@ -68,6 +68,6 @@ public class ZeroMQAgent implements MessageReceiverInterface {
     @Override
     public void messageReceived(String subject, Object message) {
         logger.info("subject=["+subject+"] message=["+message+"]");
-        
+        publisher.publish(subject, message);
     }
 }

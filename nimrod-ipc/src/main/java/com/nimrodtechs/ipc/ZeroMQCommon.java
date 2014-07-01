@@ -3,10 +3,10 @@ package com.nimrodtechs.ipc;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +18,7 @@ import com.nimrodtechs.exceptions.NimrodPubSubException;
 import com.nimrodtechs.serialization.NimrodObjectSerializationInterface;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
 
-public abstract class ZeroMQCommon {
+public abstract class ZeroMQCommon implements MessageReceiverInterface {
 	private static Logger logger = LoggerFactory.getLogger(ZeroMQCommon.class);
 
 	protected static Context context;
@@ -34,7 +34,9 @@ public abstract class ZeroMQCommon {
 	protected static final String PUBLISHER_PREFIX = "zmqPub-";
 	protected static final String SUBSCRIBER_PREFIX = "zmqSub-";
 	
-	protected static final String AGENT_SUBJECT_PREFIX = "zmq.agent.";
+	protected static final String AGENT_SUBJECT_PREFIX = "nimrod.agent.";
+	protected static final String INITIAL_VALUES_SUFFIX = "initialValues";
+	protected static final String INSTANCE_SUFFIX = "instance";
 	
 	protected static final byte[] ZERO_AS_BYTES = "0".getBytes();
 	protected static final byte[] ONE_AS_BYTES = "1".getBytes();
@@ -44,8 +46,11 @@ public abstract class ZeroMQCommon {
 	protected final static byte[] INTERRUPT_CALLS_IN_PROGRESS_OPERATION = "~2".getBytes();
 	protected static final byte[] RESET_OPERATION = "~3".getBytes();
 	
-	private static Map<String ,ZeroMQCommon> instances = new HashMap<String ,ZeroMQCommon>();
+	private static Map<String,ZeroMQCommon> instances = new HashMap<String ,ZeroMQCommon>();
+	private static Map<String,List<InstanceEventReceiverInterface>> instanceEventReceivers = new HashMap<String,List<InstanceEventReceiverInterface>>();
 	
+	protected ConcurrentHashMap<String, byte[]> lastValueCache = new ConcurrentHashMap<String, byte[]>();
+
 	protected static int TIMEOUT = 2000;
 	protected static int RETRY = 3;
 	protected List<String> externalSocketURL = new ArrayList<String>();
@@ -107,12 +112,11 @@ public abstract class ZeroMQCommon {
     public static void setZeroMQAgentOutboundSocketUrl(String zeroMQAgentOutboundSocketUrl) {
         ZeroMQCommon.zeroMQAgentOutboundSocketUrl = zeroMQAgentOutboundSocketUrl;
     }
-    private ZeroMQPubSubPublisher agentPublisher;
+    protected static ZeroMQPubSubPublisher agentPublisher;
+    
+    protected static ZeroMQPubSubSubscriber agentSubscriber;
     
     public void initialize() throws Exception {
-		if(context != null) {
-		    logger.info("Already initialized - ignored.");
-		}
 		//If externalSocketURL's have not already been injected then see if available on command line
 		if(serverSocket == null) {
 		    String sockName = System.getProperty("nimrod.rpc.serverRmiSocket");
@@ -132,8 +136,13 @@ public abstract class ZeroMQCommon {
 		if(defaultSerializer == null) {
 		    throw new Exception("No NimrodObjectSerializers available. Atleast 1 must be configured.");
 		}
-		context = ZMQ.context(1);
-		logger.info("created ZMQ context Version : "+ZMQ.getFullVersion());
+        if(context != null) {
+            logger.info("ZMQ context already initialized Version : "+ZMQ.getFullVersion());
+        }
+        else {
+            context = ZMQ.context(1);
+            logger.info("created ZMQ context Version : "+ZMQ.getFullVersion());
+        }
 	}
 	
     public void setServerSocket(String sockName) {
@@ -185,33 +194,94 @@ public abstract class ZeroMQCommon {
         else
             return false;
     }
+    
+    protected void initializeAgent() {
+        //Only initialize agent stuff once
+        if(agentSubscriber != null || agentPublisher != null)
+            return;
+        if(instanceName.equals("agentSubscriber") == false && instanceName.equals("agentPublisher") == false && getZeroMQAgentOutboundSocketUrl() != null && getZeroMQAgentInboundSocketUrl() != null) {
+            initializeAgentSubscriber();
+            initializeAgentPublisher();
+            agentPublish(AGENT_SUBJECT_PREFIX+INSTANCE_SUFFIX,instanceName+","+getServerSocket()+","+InstanceEventReceiverInterface.INSTANCE_UP);
+        }
+    }
+    
     protected void initializeAgentSubscriber() {
-//        agentPublisher = new ZeroMQPubSubPublisher();
-//        agentPublisher.setServerSocket(getZeroMQAgentOutboundSocketUrl());
-//        agentPublisher.setInstanceName("agentOut");
-//        try {
-//            agentPublisher.setManyToOne(true);
-//            agentPublisher.initialize();
-//        } catch (Exception e) {
-//            logger.error("initializeAgentOutboundSocket : failed",e);
-//        }
+        agentSubscriber = new ZeroMQPubSubSubscriber();
+        agentSubscriber.setServerSocket(getZeroMQAgentOutboundSocketUrl());
+        agentSubscriber.setInstanceName("agentSubscriber");
+        try {
+            agentSubscriber.initialize();
+            agentSubscriber.subscribe(ZeroMQCommon.AGENT_SUBJECT_PREFIX+INSTANCE_SUFFIX, this, String.class);
+        } catch (Exception e) {
+            logger.error("initializeAgentOutboundSocket : failed",e);
+        }
     }
     
     protected void initializeAgentPublisher() {
         agentPublisher = new ZeroMQPubSubPublisher();
-        agentPublisher.setServerSocket(getZeroMQAgentInboundSocketUrl());
-        agentPublisher.setInstanceName("agentPublisher");
         try {
             agentPublisher.setManyToOne(true);
+            agentPublisher.setServerSocket(getZeroMQAgentInboundSocketUrl());
+            agentPublisher.setInstanceName("agentPublisher");
             agentPublisher.initialize();
         } catch (Exception e) {
             logger.error("initializeAgentInboundSocket : failed",e);
         }
     }
     
-    protected void agentPublish(String subject, String message) {
-        agentPublisher.publish(subject, message);
+    protected void dispose() {
+        if(getInstanceName() != null && getInstanceName().equals("agentSubscriber") || getInstanceName().equals("agentPublisher"))
+            return;
+        agentPublish(AGENT_SUBJECT_PREFIX+INSTANCE_SUFFIX,instanceName+","+getServerSocket()+","+InstanceEventReceiverInterface.INSTANCE_DOWN);
+        if(agentSubscriber != null)
+        {
+            agentSubscriber.dispose();
+            agentSubscriber = null;
+        }
+        if(agentPublisher != null) {
+            agentPublisher.dispose();
+            agentPublisher = null;
+        }
     }
     
+    protected void agentPublish(String subject, String message) {
+        if(agentPublisher != null)
+            agentPublisher.publish(subject, message);
+    }
     
+    public static void addInstanceEventReceiver(String instanceName, InstanceEventReceiverInterface listener) {
+        List<InstanceEventReceiverInterface> listeners = instanceEventReceivers.get(instanceName);
+        if(listeners == null) {
+            listeners = new ArrayList<InstanceEventReceiverInterface>();
+            instanceEventReceivers.put(instanceName, listeners);
+        }
+        if(listeners.contains(listener) == false) {
+            listeners.add(listener);
+        }
+    }
+    
+    @Override
+    public void messageReceived(String subject, Object message) {
+        if(subject.equals(AGENT_SUBJECT_PREFIX+INITIAL_VALUES_SUFFIX))
+        {
+            String initialValueSubject = (String)message;
+            byte[] initialValue = lastValueCache.get(initialValueSubject);
+            if(initialValue != null){
+                ((ZeroMQPubSubPublisher)this).publish(initialValueSubject, initialValue);
+                logger.info("Published initial values for subject=["+message+"]");
+            }
+        } else if(subject.equals(AGENT_SUBJECT_PREFIX+INSTANCE_SUFFIX)) {
+            //Notity listeners for this event
+            String[] parts = ((String)message).split(",");
+            List<InstanceEventReceiverInterface> listeners = instanceEventReceivers.get(parts[0]);
+            if(listeners == null)
+                return;
+            int instanceStatus = Integer.parseInt(parts[2]);
+            for(int i=0;i<listeners.size();i++)
+            {
+                listeners.get(i).instanceEvent(parts[0], parts[1], instanceStatus);
+            }
+        }
+    }
 }

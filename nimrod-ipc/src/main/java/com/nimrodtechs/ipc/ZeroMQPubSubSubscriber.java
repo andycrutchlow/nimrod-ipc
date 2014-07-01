@@ -55,8 +55,6 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         return conflatingExecutor;
     }
     
-    private ZeroMQPubSubPublisher agentPublisher;
-
     @Override
     protected String getDefaultInstanceName() {
         return "zmqSubscriber";
@@ -84,16 +82,14 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
                 setupLock.unlock();
         }
         //Notify the outside world that this instance is running
-        if(instanceName.equals("agentSubscriber") == false && instanceName.equals("agentPublisher") == false && getZeroMQAgentInboundSocketUrl() != null) {
-            initializeAgentPublisher();
-            agentPublish(AGENT_SUBJECT_PREFIX+"instance",instanceName+",up");
-        }
+        initializeAgent();
         
         logger.info("Initialized connection on " + clientSocket);
     }
 
     public void dispose() {
         logger.warn(getInstanceName() + " dispose called");
+        super.dispose();
         keepRunning = false;
         // subscriberThread.interrupt();
         Socket client;
@@ -166,7 +162,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         }
         // Publish message to trigger lastValueCache publish for subject
         if (wildcard == false && subject.startsWith(AGENT_SUBJECT_PREFIX) == false && agentPublisher != null) {
-            agentPublisher.publish(AGENT_SUBJECT_PREFIX+"initialvalues", subject);
+            agentPublisher.publish(AGENT_SUBJECT_PREFIX+INITIAL_VALUES_SUFFIX, subject);
             logger.info("requested initial values for " + subject);
         }
 
