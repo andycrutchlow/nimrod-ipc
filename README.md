@@ -13,6 +13,7 @@ A further optional extension or mode is available. By running a supplied agent p
 
 1) Latest value re-publish on initial subscription. So when a subject is initially subscribed to by a subscriber process the publisher of that subject will re-publish its most recent value so the subscriber process immediately sees the current value rather than having to wait for the next change.
 
-2) Any start or stop of either a RMI service or a Publisher service will be communicated to all other processes running the API which are configured to connect to the agent and have registered callbacks expressing an interest in a particular services start/stop event.
+2) Any start or stop of either a RMI service (server or client side) or a PubSub service (publisher or subscriber) will be communicated to all other processes running the API which are configured to connect to the agent and have registered callbacks expressing an interest in a particular services start/stop event.
 
-
+An explanation of the name :
+I am a freelance software engineer. Nimrod Technology Services is the name of my incorporated company in Canada. Amongst other things Nimrod is the name of an aircraft my father flew in whilst serving in the RAF. Nimrod is also term coined by bugs bunny from loony tunes and has come to mean stupid or referring to an idiot, simple-minded...and I like that association and irony in that I am striving to keep api's as simple as possible in their usage, hiding away the complexity. Nimrod is also the name of a programming language and appologies to those who have arrived here thinking that this is a library or extension to the Nimrod language.
