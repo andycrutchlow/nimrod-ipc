@@ -241,6 +241,18 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
                             continue;
                         }
                         
+                        if(inShutDownMode) {
+                            frontend.send(returnAddressPart1, ZMQ.SNDMORE);
+                            frontend.send(returnAddressPart2, ZMQ.SNDMORE);
+                            frontend.send(EMPTY_FRAME, ZMQ.SNDMORE);
+                            frontend.send(threadRequestIdFrame, ZMQ.SNDMORE);
+                            frontend.send(ZERO_AS_BYTES, ZMQ.SNDMORE);
+                            // For now just pass back exception name...add more
+                            // sophistication later...
+                            frontend.send(NimrodRmiNotConnectedException.class.getName().getBytes(), 0);
+                            continue;
+                        }
+                        
                         // Get first available worker
                         int workerId = getFreeWorker();
 
@@ -540,8 +552,8 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
                 // Check if time for this thread to shutdown
                 if (testHighOrderBytesAreEqual(returnAddressPart1, SHUTDOWN_OPERATION)) {
                     // Reply back and exit loop
-                    worker.send(SHUTDOWN_OPERATION, 0);
                     updateWorkerStatus(id, 3);
+                    worker.send(SHUTDOWN_OPERATION, 0);
                     break;
                 }
                 // Indicate this worker is busy
