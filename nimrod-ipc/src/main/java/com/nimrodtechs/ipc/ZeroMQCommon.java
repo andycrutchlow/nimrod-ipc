@@ -33,6 +33,7 @@ import org.zeromq.ZMQ.Socket;
 import com.nimrodtechs.exceptions.NimrodPubSubException;
 import com.nimrodtechs.serialization.NimrodObjectSerializationInterface;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
+import com.nimrodtechs.serialization.kryo.KryoSerializer;
 
 public abstract class ZeroMQCommon implements MessageReceiverInterface {
 	private static Logger logger = LoggerFactory.getLogger(ZeroMQCommon.class);
@@ -98,7 +99,7 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
         this.instanceName = instanceName;
         instances.put(instanceName, this);
     }
-    protected static ZeroMQCommon getInstance(String name)
+    public static ZeroMQCommon getInstance(String name)
     {
         return instances.get(name);
     }
@@ -143,6 +144,10 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
 			}
 			
 		}
+		
+		if(NimrodObjectSerializer.GetInstance().getSerializers().size() == 0)
+		    NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
+		
 		//TODO This needs a bit more work..if there are multiples then need to pass in which is default
 		for(Map.Entry<String, NimrodObjectSerializationInterface> entry : NimrodObjectSerializer.GetInstance().getSerializers().entrySet()) {
 		    defaultSerializer = entry.getValue();

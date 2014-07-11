@@ -116,10 +116,13 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
     }
 
     public void publish(String subject, Object message)    {
-        publish(defaultSerializerId, subject, message);
+        publish(defaultSerializerId, subject, message, true);
+    }
+    public void publish(String subject, Object message, boolean saveLatestValue)    {
+        publish(defaultSerializerId, subject, message,saveLatestValue);
     }
 
-    public void publish(String serializationFormatId, String subject, Object message)    {
+    public void publish(String serializationFormatId, String subject, Object message, boolean saveLatestValue)    {
         try
         {
             NimrodObjectSerializationInterface serializer = NimrodObjectSerializer.GetInstance().getSerializers().get(serializationFormatId);
@@ -144,7 +147,7 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
                 messageAsBytesWithTimestamp = insertLong(messageAsBytes,System.nanoTime());
             publishRaw(subject, messageAsBytesWithTimestamp);
             //Don't store initial value publish messages
-            if(subject.startsWith(AGENT_SUBJECT_PREFIX) == false)
+            if(subject.startsWith(AGENT_SUBJECT_PREFIX) == false && saveLatestValue == true)
                 lastValueCache.put(subject,messageAsBytesWithTimestamp);
 
         }
