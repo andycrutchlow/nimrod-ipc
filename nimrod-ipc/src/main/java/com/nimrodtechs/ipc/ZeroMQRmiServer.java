@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -89,18 +90,26 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
     class ServiceMethods {
         String serviceName;
         Object service;
-        private HashMap<String, Method> methods = new HashMap<String, Method>();
+        private HashMap<String, MethodWrapper> methods = new HashMap<String, MethodWrapper>();
     }
 
+    class MethodWrapper {
+        Method method;
+        AtomicInteger callCount = new AtomicInteger(0);
+        AtomicLong cummulativeTime = new AtomicLong(0);
+    }
+    
     Class parameterTypes[] = new Class[] { List.class };
 
     public void addExposedService(Object service, String[] methods) throws SecurityException, NoSuchMethodException {
         ServiceMethods sm = new ServiceMethods();
         exposedServices.put(service.getClass().getSimpleName(), sm);
         sm.service = service;
-        sm.methods = new HashMap<String, Method>();
+        sm.methods = new HashMap<String, MethodWrapper>();
         for (int i = 0; i < methods.length; i++) {
-            sm.methods.put(methods[i], sm.service.getClass().getMethod(methods[i], parameterTypes));
+            MethodWrapper mw = new MethodWrapper();
+            mw.method = sm.service.getClass().getMethod(methods[i], parameterTypes);
+            sm.methods.put(methods[i], mw);
         }
     }
 
@@ -114,7 +123,7 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
             sm.serviceName = service.getClass().getSimpleName();
         }
         sm.service = service;
-        sm.methods = new HashMap<String, Method>();
+        sm.methods = new HashMap<String, MethodWrapper>();
         exposedServices.put(sm.serviceName, sm);
         // Loop thru the methods adding any that are exposed
         Method[] methods = service.getClass().getMethods();
@@ -122,7 +131,9 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
             // System.out.println(method.getName());
             if (method.isAnnotationPresent(ExposedMethod.class)) {
                 String methodName = method.getName();
-                sm.methods.put(methodName, method);
+                MethodWrapper mw = new MethodWrapper();
+                mw.method = method;
+                sm.methods.put(methodName, mw);
                 logger.info("Service : " + sm.serviceName + " hosted by class : " + sm.service.getClass().getSimpleName() + " exposes method : " + methodName);
             }
         }
@@ -592,8 +603,7 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
                     // 3rd param is serialization id
                     String serializationId = new String(paramsAsBytes.get(2));
                     try {
-                        // Look up service/method assuming was registered
-                        // directly in this transport implementation
+                        // Look up service/method 
                         String serviceName = new String(paramsAsBytes.get(0));
                         String methodName = new String(paramsAsBytes.get(1));
                         ServiceMethods sm = exposedServices.get(serviceName);
@@ -603,20 +613,24 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
                             // TODO add serialized exception
                             responseList.add("ServiceNotRegisteredException".getBytes());
                         } else {
-                            Method method;
-                            if ((method = sm.methods.get(methodName)) == null) {
+                            MethodWrapper mw;
+                            if ((mw = sm.methods.get(methodName)) == null) {
                                 responseList.add(ZERO_AS_BYTES);
                                 // TODO add serialized exception
                                 responseList.add("MethodNotRegisteredException".getBytes());
                             } else {
                                 // We have a valid service and method..so remove
-                                // the redundant entries from params and pass to
-                                // the method
+                                // the redundant entries from params and pass to the ACTUAL called method
                                 paramsAsBytes.remove(0);
                                 paramsAsBytes.remove(0);
-
-                                List<byte[]> fullResponse = (List<byte[]>) method.invoke(sm.service, paramsAsBytes);
+                                mw.callCount.incrementAndGet();
+                                long t1 = System.nanoTime();
+                                List<byte[]> fullResponse = (List<byte[]>) mw.method.invoke(sm.service, paramsAsBytes);
+                                long t2 = System.nanoTime() - t1;
+                                mw.cummulativeTime.addAndGet(t2);
                                 responseList.add(0, ONE_AS_BYTES);
+                                //Add time taken as next 8 bytes
+                                responseList.add(convertLongToBytes(t2));
                                 for (byte[] entry : fullResponse) {
                                     responseList.add(entry);
                                 }
@@ -671,5 +685,4 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
             logger.info(name + " exiting...");
         }
     }
-
 }

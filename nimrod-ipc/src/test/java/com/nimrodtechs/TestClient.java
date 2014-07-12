@@ -25,11 +25,12 @@ import com.nimrodtechs.serialization.kryo.KryoSerializer;
 
 public class TestClient {
     static ZeroMQRmiClient testServerConnection;
-    
+    static boolean keepRunning = true;
 	public static void main(String[] args) {
 	  //Register a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
+                keepRunning = false;
                 if(testServerConnection != null)
                     testServerConnection.dispose();
             }
@@ -42,20 +43,21 @@ public class TestClient {
         testServerConnection.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/rmiServerSocket"));
         try {
             testServerConnection.initialize();
-            while(true) {
+            while(keepRunning) {
                 try {
                     String response = (String)testServerConnection.executeRmiMethod(String.class, "ANDYTEST","rmiTestMethod1", "hello");
                     System.out.println("response = "+response);
                 } catch (NimrodRmiNotConnectedException e) {
                     System.out.println("Server not detected .. try again");
                 }
-                Thread.sleep(5000);
+                Thread.sleep(2000);
             }
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
         testServerConnection.dispose();
+        System.out.println("TestClient finished");
 	}
 
 }

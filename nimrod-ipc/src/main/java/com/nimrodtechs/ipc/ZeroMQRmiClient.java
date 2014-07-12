@@ -16,10 +16,13 @@
 
 package com.nimrodtechs.ipc;
 
+import java.lang.management.ManagementFactory;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +31,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import org.apache.commons.pool.BasePoolableObjectFactory;
 import org.apache.commons.pool.ObjectPool;
@@ -57,7 +63,7 @@ import com.nimrodtechs.serialization.NimrodObjectSerializer;
  * @author andy
  *
  */
-public class ZeroMQRmiClient extends ZeroMQCommon {
+public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBean {
     private static Logger logger = LoggerFactory.getLogger(ZeroMQRmiClient.class);
     private ZeroMQRmiClient instance;
     private boolean connected = false;
@@ -93,6 +99,19 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
     private ObjectPool inprocPool = null;
     private int finalPoolSize;
     private int inprocPoolSize = Runtime.getRuntime().availableProcessors() / 2;
+    
+    class CallingMetric {
+        String currentServiceAndMethodName;
+        AtomicInteger callCount = new AtomicInteger(0);
+        AtomicLong cummulativeServerExecutionTime = new AtomicLong(0);
+        AtomicLong cummulativeRoundTripTime = new AtomicLong(0);
+        long minServerExecutionTime = Long.MAX_VALUE;
+        long maxServerExecutionTime = 0;
+        long minRoundTripTime = Long.MAX_VALUE;
+        long maxRoundTripTime = 0;
+    }
+    ConcurrentHashMap<String, CallingMetric> callingMetrics = new ConcurrentHashMap<String, CallingMetric>();
+    
     private List<InprocConnection> currentInprocConnections = new ArrayList<InprocConnection>();
 
     class InprocConnection {
@@ -108,6 +127,9 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
         ReentrantLock lock = new ReentrantLock();
         Condition condition = lock.newCondition();
         String threadRequestIdentifier;
+        String currentServiceAndMethodName;
+        CallingMetric currentCallingMetric;
+        long currentCallTimeTaken;
     }
 
     class PoolConnectionFactory extends BasePoolableObjectFactory {
@@ -185,6 +207,12 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
         externalSocketURL.add(clientSocket);
         initializeQueue();
         initializeHeartbeat();
+        
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer(); 
+        ObjectName mxbeanName = new ObjectName("com.nimrodtechs:type=ZeroMQRmiClient");
+        mbs.registerMBean(this, mxbeanName);
+                     
+        
         //Indicates that subsequent calls to initialize is NOT the first time
         isFirstTime = false;
     }
@@ -449,7 +477,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
             paramList.add(serializer.serialize(param));
         }
         try {
-            List<byte[]> responseList = sendAndReceive(paramList, timeout);
+            List<byte[]> responseList = sendAndReceive(serviceName, methodName, paramList, timeout);
             Object response = null;
             if(responseList.size() > 0)
             {
@@ -501,7 +529,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
     /**
      * Internal method for doing actual RMI over zeroMQ
      */
-    private List<byte[]> sendAndReceive(List<byte[]> parameters, long timeout) throws NimrodRmiException
+    private List<byte[]> sendAndReceive(String serviceName, String methodName, List<byte[]> parameters, long timeout) throws NimrodRmiException
 
     {
         // Add in a unique thread request identifier
@@ -544,6 +572,17 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
             }
             inprocConnection.timeout = timeout;
             inprocConnection.threadRequestIdentifier = threadRequestIdentifier;
+            inprocConnection.currentServiceAndMethodName = serviceName+":"+methodName;
+            CallingMetric metric = callingMetrics.get(inprocConnection.currentServiceAndMethodName);
+            if(metric == null) {
+                metric = new CallingMetric();
+                metric.currentServiceAndMethodName = inprocConnection.currentServiceAndMethodName;
+                CallingMetric metric2 = callingMetrics.putIfAbsent(metric.currentServiceAndMethodName, metric);
+                if(metric2 != null)
+                    metric = metric2;
+            }
+            inprocConnection.currentCallingMetric = metric;
+            
             callsInProgress.put(inprocConnection.thread.getName(), inprocConnection);
 
             // Insert the current calling thread name as the first parameter
@@ -553,9 +592,11 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
 
             // Initiate the sending process thru the InprocConnection got from
             // the pool..
+            
             inprocConnection.queueIn.put(actualParameters);
             // Get the response from the InprocConnection
             List<byte[]> response = inprocConnection.queueOut.take();
+            //long timeTaken 
             // if(inprocConnection.alreadyReturnedToPool == false)
             // inprocPool.returnObject(inprocConnection);
             // inprocConnection = null;
@@ -581,9 +622,27 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
                     classAsBytes = response.get(2);
                 throw new NimrodRmiRemoteException("NimrodRmiRemoteException ClassName=" + className, className, classAsBytes);
             }
-            // Its a good response to remove the 0/1 indicator in the first
-            // entry and return the rest back to caller
+            // Its a good response so remove the 0/1 indicator in the first
+            // entry and the timetaken value in second entry and return the rest back to caller
             response.remove(0);
+            //Next entry is time taken in server side as a long in 8 bytes..
+            long timetakenInServer = convertBytesToLong(response.get(0));
+            //Remove it..
+            response.remove(0);
+            //Update metrics
+            long tripTime = inprocConnection.currentCallTimeTaken - timetakenInServer;
+            metric.callCount.incrementAndGet();
+            metric.cummulativeRoundTripTime.addAndGet(tripTime);
+            if(metric.maxRoundTripTime < tripTime)
+                metric.maxRoundTripTime = tripTime;
+            if(tripTime < metric.minRoundTripTime)
+                metric.minRoundTripTime = tripTime;
+            metric.cummulativeServerExecutionTime.addAndGet(timetakenInServer);
+            if(metric.maxServerExecutionTime < timetakenInServer)
+                metric.maxServerExecutionTime = timetakenInServer;
+            if(timetakenInServer < metric.minServerExecutionTime)
+                metric.minServerExecutionTime = timetakenInServer;
+            //Return remaining items
             return response;
         } catch (Exception e) {
             if (e instanceof NimrodRmiException == false)
@@ -595,12 +654,15 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
                 try {
                     inprocConnection.queueIn.clear();
                     inprocConnection.queueOut.clear();
+                    inprocConnection.currentServiceAndMethodName = null;
+                    inprocConnection.currentCallingMetric = null;
                     inprocPool.returnObject(inprocConnection);
                 } catch (Exception e) {
                 }
             }
         }
     }
+
 
     /**
      * This is the task that the InprocPool is effectively starting and managing
@@ -711,7 +773,9 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
                     // Check if socket needs recreating..
 
                     inprocConnection.socket.setReceiveTimeOut(timeout);
-
+                    long t1 = System.nanoTime();
+                    //TODO This is where rmi call really begins trip thru ZMQ layer..
+                    
                     for (int i = 0; i < parameters.size(); i++) {
                         inprocConnection.socket.send(parameters.get(i), (i == parameters.size() - 1) ? 0 : ZMQ.SNDMORE);
                     }
@@ -723,6 +787,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
                         byte[] frame2;
                         try {
                             frame1 = inprocConnection.socket.recv(0);
+                            inprocConnection.currentCallTimeTaken = System.nanoTime() - t1;
                         } catch (Throwable e) {
                             // Must be a timeout
                             logger.error("Unexpected exception on recv", e);
@@ -1173,6 +1238,33 @@ public class ZeroMQRmiClient extends ZeroMQCommon {
             thread.start();
             alreadyNotifiedBreak = true;
         }
+    }
+
+    @Override
+    public String listCallMetrics() {
+        StringBuffer sb = new StringBuffer();
+        for(Map.Entry<String, CallingMetric> entry : callingMetrics.entrySet()) {
+            if(entry.getValue().callCount.get() > 0)
+            {
+                BigDecimal avgTrip = new BigDecimal(entry.getValue().cummulativeRoundTripTime.get() / entry.getValue().callCount.get()).setScale(3,BigDecimal.ROUND_HALF_UP).movePointLeft(6).setScale(6,BigDecimal.ROUND_HALF_UP);
+                BigDecimal avgServ = new BigDecimal(entry.getValue().cummulativeServerExecutionTime.get() / entry.getValue().callCount.get()).setScale(3,BigDecimal.ROUND_HALF_UP).movePointLeft(6).setScale(6,BigDecimal.ROUND_HALF_UP);
+                sb.append(entry.getValue().currentServiceAndMethodName+" "+entry.getValue().callCount.get()+
+                        " avgTrip "+avgTrip.toPlainString()+
+                        " avgSerX "+avgServ.toPlainString()+
+                        " minTrip "+new BigDecimal(entry.getValue().minRoundTripTime).movePointLeft(6).setScale(6,BigDecimal.ROUND_HALF_UP).toPlainString()+
+                        " maxTrip "+new BigDecimal(entry.getValue().maxRoundTripTime).movePointLeft(6).setScale(6,BigDecimal.ROUND_HALF_UP).toPlainString()+
+                        " minSerX "+new BigDecimal(entry.getValue().minServerExecutionTime).movePointLeft(6).setScale(6,BigDecimal.ROUND_HALF_UP).toPlainString()+
+                        " maxSerX "+new BigDecimal(entry.getValue().maxServerExecutionTime).movePointLeft(6).setScale(6,BigDecimal.ROUND_HALF_UP).toPlainString()+
+                        "\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public String clearCallMetrics() {
+        callingMetrics.clear();
+        return "clearCallMetrics done";
     }
 
 }

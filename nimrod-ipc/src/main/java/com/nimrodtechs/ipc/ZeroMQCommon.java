@@ -314,4 +314,22 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
             }
         }
     }
+    
+    static byte[] convertLongToBytes(long l) {
+        byte[] message = new byte[8];
+        for (int i = 7; i > 0; i--) {
+            message[i] = (byte) l;
+            l >>>= 8;
+        }
+        message[0] = (byte) l;
+        return message;
+    }
+    
+    static long convertBytesToLong(byte[] by) {
+        long value = 0;
+        for(int i = 0; i< by.length; i++) {
+            value = (value << 8) + (by[i] & 0xff);
+        }
+        return value;
+    }
 }
