@@ -36,6 +36,7 @@ public class TestPublisher implements InstanceEventReceiverInterface {
         });
         // Configure the general serializer by adding a kryo serializer
         NimrodObjectSerializer.GetInstance().getSerializers().put("kryo", new KryoSerializer());
+        // Add event listener that will be called (if agent is running) when subscriber 'TestSubscriber' is started
         ZeroMQCommon.addInstanceEventReceiver("TestSubscriber", instance);
         publisher = new ZeroMQPubSubPublisher();
         publisher.setServerSocket(System.getProperty("rmiServerSocketUrl", "ipc://" + System.getProperty("java.io.tmpdir") + "/TestPublisherSocket.pubsub"));
@@ -46,7 +47,7 @@ public class TestPublisher implements InstanceEventReceiverInterface {
             for (int i = 0; i < 1000; i++) {
                 publisher.publish("testsubject", "testmessage");
                 publisher.publish("testsubject2", "testmessage2");
-                Thread.sleep(600000);
+                Thread.sleep(2000);
             }
             publisher.dispose();
 
@@ -59,7 +60,9 @@ public class TestPublisher implements InstanceEventReceiverInterface {
 
     @Override
     public void instanceEvent(String instanceName, String instanceUrl, int instanceStatus) {
-        System.out.println("instanceName=["+instanceName+"] instanceUrl=["+instanceUrl+"] status=["+instanceStatus+"]");
-
+        if(instanceStatus == 0)
+            System.out.println("instanceName=["+instanceName+"] instanceUrl=["+instanceUrl+"] status=["+instanceStatus+"] is now running");
+        else if(instanceStatus == 1)
+            System.out.println("instanceName=["+instanceName+"] instanceUrl=["+instanceUrl+"] status=["+instanceStatus+"] has stopped");
     }
 }

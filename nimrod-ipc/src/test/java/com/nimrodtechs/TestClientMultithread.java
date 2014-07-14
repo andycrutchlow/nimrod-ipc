@@ -58,7 +58,7 @@ public class TestClientMultithread {
         testServerConnection.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/rmiServerSocket"));
         try {
             testServerConnection.initialize();
-            //kick of 10 threads running rmi test calling 2 methods
+            //kick of 10 threads running rmi test calling remote methods
             for(int i=0;i<10;i++) {
                 
                 new Thread(new TestTask()).start();
@@ -68,8 +68,6 @@ public class TestClientMultithread {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        //testServerConnection.dispose();
-        //System.out.println("TestClient finished");
 	}
 	
 	AtomicInteger count = new AtomicInteger(1);
