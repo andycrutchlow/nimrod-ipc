@@ -16,6 +16,8 @@
 
 package com.nimrodtechs;
 
+import java.math.BigDecimal;
+
 import ch.qos.logback.classic.Logger;
 
 import com.nimrodtechs.exceptions.NimrodRmiNotConnectedException;
@@ -26,6 +28,7 @@ import com.nimrodtechs.serialization.kryo.KryoSerializer;
 public class TestClient {
     static ZeroMQRmiClient testServerConnection;
     static boolean keepRunning = true;
+    static BigDecimal bd = new BigDecimal("100.123");
 	public static void main(String[] args) {
 	  //Register a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -47,6 +50,8 @@ public class TestClient {
                 try {
                     String response = (String)testServerConnection.executeRmiMethod(String.class, "ANDYTEST","rmiTestMethod1", "hello");
                     System.out.println("response = "+response);
+                    String response2 = (String)testServerConnection.executeRmiMethod(String.class, "ANDYTEST","rmiTestMethod2", "hello",bd, "there" );
+                    System.out.println("response2 = "+response2);
                 } catch (NimrodRmiNotConnectedException e) {
                     System.out.println("Server not detected .. try again");
                 }

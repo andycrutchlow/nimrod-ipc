@@ -222,6 +222,7 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
                 items.poll();
                 // Handle client activity on frontend..forward on to dealer
                 if (items.pollin(0)) {
+                    //logger.info("items.pollin(0)");
                     try {
                         byte[] returnAddressPart1;
                         byte[] returnAddressPart2 = null;
@@ -290,6 +291,7 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
                         // because we are in the process of shutting down ..so reply
                         // immediately back to caller with error
                         if (workerId == -1) {
+                            logger.info("Run out of workerThreads - reject RMI call");
                             frontend.send(returnAddressPart1, ZMQ.SNDMORE);
                             frontend.send(returnAddressPart2, ZMQ.SNDMORE);
                             frontend.send(EMPTY_FRAME, ZMQ.SNDMORE);
@@ -346,6 +348,7 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
                 // Handle inbound dealer/worker activity...forward on to waiting
                 // clients if originated from a client
                 if (items.pollin(1)) {
+                    //logger.info("items.pollin(1)");
                     try {
                         String internalAddressPart1;
                         byte[] empty;
@@ -480,6 +483,7 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
     void increaseWorkerThreads() {
         try {
             workerThreadLock.lock();
+            logger.info("Increasing workerThreads size by "+workerThreadPoolInitialSize);
             // Quickly extend array and transfer current values..increase in
             // increments of workerThreadPoolInitialSize
             int[] workerStatusNew = new int[workerStatus.length + workerThreadPoolInitialSize];

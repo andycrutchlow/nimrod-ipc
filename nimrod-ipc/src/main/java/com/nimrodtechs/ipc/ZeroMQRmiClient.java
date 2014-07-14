@@ -98,7 +98,8 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
     private AtomicLong seqNo = new AtomicLong(0);
     private ObjectPool inprocPool = null;
     private int finalPoolSize;
-    private int inprocPoolSize = Runtime.getRuntime().availableProcessors() / 2;
+    //private int inprocPoolSize = Runtime.getRuntime().availableProcessors() / 2;
+    private int inprocPoolSize = 16;
     
     class CallingMetric {
         String currentServiceAndMethodName;

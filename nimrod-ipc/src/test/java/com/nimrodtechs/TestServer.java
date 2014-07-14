@@ -18,18 +18,25 @@ package com.nimrodtechs;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.nimrodtechs.annotations.ExposedMethod;
 import com.nimrodtechs.annotations.ExposedServiceName;
+import com.nimrodtechs.ipc.ZeroMQRmiClient;
 import com.nimrodtechs.ipc.ZeroMQRmiServer;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
 import com.nimrodtechs.serialization.kryo.KryoSerializer;
 
 @ExposedServiceName(serviceName = "ANDYTEST")
 public class TestServer {
+    private static Logger logger = LoggerFactory.getLogger(TestServer.class);
     static ZeroMQRmiServer server;
-
+    
     public static void main(String[] args) {
         //Register a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -80,14 +87,25 @@ public class TestServer {
         resultArray.add(NimrodObjectSerializer.serialize(serializerId, result));
         return resultArray;
     }
+    Random r1 = new Random();
     /**
      * This is the actual remote method we are calling
      * @param param
      * @return
      */
-    public String rmiTestMethod1(String param){
-        return System.currentTimeMillis()+" received msg ["+param+"]";
-    }
+    public String rmiTestMethod1(String param) {
+        long delay = 0;
+        try {
+          //Simulate some work with a random delay between 1 and 20 millis
+            delay = r1.nextInt(19) + 1;
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        logger.info("rmiTestMethod1 called ["+param+"]");
+        return Thread.currentThread().getName()+" rmiTestMethod1 received msg ["+param+"] at "+new Date().toString()+" took "+delay+"ms";
+   }
     
     @ExposedMethod
     public List<byte[]> rmiTestMethod2(List<byte[]> params) throws Exception {
@@ -105,6 +123,7 @@ public class TestServer {
         resultArray.add(NimrodObjectSerializer.serialize(serializerId, result));
         return resultArray;
     }
+    Random r2 = new Random();
     /**
      * This is the actual remote method we are calling. 3 parameters.
      * @param str1
@@ -113,7 +132,18 @@ public class TestServer {
      * @return
      */
     public String rmiTestMethod2(String str1, BigDecimal bd1, String str2 ){
-        return System.currentTimeMillis()+" received msg ["+str1+"]"+"["+bd1+"]"+"["+str2+"]";
+        //Simulate some work with a random delay between 1 and 20 millis
+        long delay = 0;
+        try {
+          //Simulate some work with a random delay between 1 and 20 millis
+            delay = r2.nextInt(19) + 1;
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        logger.info("rmiTestMethod2 called ["+str1+"]");
+        return Thread.currentThread().getName()+" rmiTestMethod2 received msg ["+str1+"]"+"["+bd1+"]"+"["+str2+"] at "+new Date().toString()+" took "+delay+"ms";
     }
     
 }
