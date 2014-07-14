@@ -25,8 +25,10 @@ Planned enhancements :
 
 Prerequisites :
 Native libraries for ZeroMQ built/installed and available to jvm via java.library.path. Similarly, native libraries for java bindings for ZeroMQ for the target deployment environment. Excellent documentation/instructions along with downloads are available at http://zeromq.org/intro:get-the-software and http://zeromq.org/bindings:java.
-I have developed/tested against Stable Release 4.0.4.
+I originally developed and tested against Stable Release 3.2.2. so download and build this version or as close as possible.
 In theory jeromq https://github.com/zeromq/jeromq should work also as an alternative to the native version, but I have yet to test to confirm.
+I have recently tested against Stable Release 4.0.4 and experienced some issues when running load with multithreading tests which failed and this is troublesome! I will be testing with 4.0.5 with the hope that this issues are addressed otherwise I will need to follow up with iMatrix.
+
 
 An explanation of the library name :
 I am a freelance software engineer. Nimrod Technology Services is the name of my incorporated company in Canada. Amongst other things Nimrod is the name of an aircraft my father flew in whilst serving in the RAF. Nimrod is also term coined by Bugs Bunny from loony tunes and has come to mean stupid or simple-minded...and I like that association and irony in that I am striving to keep api's as simple as possible in their usage, hiding away the complexity. Nimrod is also the name of a programming language and appologies to those who have arrived here thinking that this is a library or extension to the actual Nimrod language.
