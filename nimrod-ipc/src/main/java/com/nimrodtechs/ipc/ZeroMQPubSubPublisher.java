@@ -57,8 +57,9 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
         return "zmqPublisher";
     }
 
-    public void initialize() throws Exception {
-        super.initialize();
+    public boolean initialize() throws Exception {
+        if(super.initialize() == false)
+            return false;
 
         // Start a dedicated thread to manage the publishing
         try {
@@ -82,7 +83,7 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
             if (setupLock.isHeldByCurrentThread())
                 setupLock.unlock();
         }
-
+        return true;
     }
 
     public void dispose()

@@ -76,8 +76,9 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         return "zmqSubscriber";
     }
 
-    public void initialize() throws Exception {
-        super.initialize();
+    public boolean initialize() throws Exception {
+        if(super.initialize() == false)
+            return false;
 
         internalSocketName = INTERNAL_SOCKET_NAME_PREFIX + "-" + getInstanceName() + "-" + thisInstanceId;
 
@@ -101,6 +102,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         initializeAgent();
         
         logger.info("Initialized connection on " + clientSocket);
+        return true;
     }
 
     public void dispose() {

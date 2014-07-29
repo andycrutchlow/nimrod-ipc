@@ -141,8 +141,9 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
             exposedServices.remove(service.getClass().getSimpleName());
     }
 
-    public void initialize() throws Exception {
-        super.initialize();
+    public boolean initialize() throws Exception {
+        if(super.initialize() == false)
+            return false;
 
         if (workerThreadPoolInitialSize == -1) {
             workerThreadPoolInitialSize = Integer.parseInt(System.getProperty("threadPoolSize", Integer.toString(Runtime.getRuntime().availableProcessors() / 2)));
@@ -169,7 +170,7 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
         }
 
         createWorkerThreads();
-
+        return true;
     }
 
     public void dispose() {

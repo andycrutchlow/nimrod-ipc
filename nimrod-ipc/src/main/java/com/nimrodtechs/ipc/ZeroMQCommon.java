@@ -73,6 +73,7 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
     protected List<String> externalSocketURL = new ArrayList<String>();
     protected int currentExternalSocketEntry = 0;
 
+    protected boolean alreadyInitialized = false;
     /**
      * In the context of a rmi client/server then server socket is the listening
      * side that clients connect to and subsequently send requests in on. In the
@@ -144,7 +145,9 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
 
     protected static ZeroMQPubSubSubscriber agentSubscriber;
 
-    public void initialize() throws Exception {
+    public boolean initialize() throws Exception {
+        if(alreadyInitialized)
+            return false;
         // If externalSocketURL's have not already been injected then see if
         // available on command line
         if (serverSocket == null) {
@@ -176,6 +179,8 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
             context = ZMQ.context(1);
             logger.info("created ZMQ context Version : " + ZMQ.getFullVersion());
         }
+        alreadyInitialized = true;
+        return true;
     }
 
     public void setServerSocket(String sockName) {

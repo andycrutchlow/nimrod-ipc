@@ -196,9 +196,9 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
         instance = this;
     }
 
-    public void initialize() throws Exception {
-
-        super.initialize();
+    public boolean initialize() throws Exception {
+        if(super.initialize() == false)
+            return false;
 
         logger.info("ZMQ Version : " + ZMQ.getFullVersion());
         internalSocketName = INTERNAL_SOCKET_NAME_PREFIX + "-"+getInstanceName()+"-" + thisInstanceId;
@@ -216,6 +216,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
         
         //Indicates that subsequent calls to initialize is NOT the first time
         isFirstTime = false;
+        return true;
     }
 
     public void dispose() {
