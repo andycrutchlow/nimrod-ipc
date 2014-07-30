@@ -6,19 +6,11 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<!-- *** THIS IS THE ACTUAL VERSION OF THE APPLICATION *** -->
-		<!-- *** CHANGE IT WITH EACH RELEASE *** -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
 		<logback.version>1.0.13</logback.version>
-		<hornetq.version>snap-r9548</hornetq.version>
-		<netty.version>3.9.0.Final</netty.version>
-		<mvn.spring.version>3.1.0.RELEASE</mvn.spring.version>
-		<slf4j.version>1.6.2</slf4j.version>
-		<!-- log4j 
-		<logback.version>0.9.26</logback.version>
-		-->
+		<slf4j.version>1.7.7</slf4j.version>
 		<mvn.log4j.rootCategory>WARN</mvn.log4j.rootCategory>
 		<mvn.log4j.category.org.springframework.beans.factory>WARN</mvn.log4j.category.org.springframework.beans.factory>
 	</properties>
@@ -77,12 +69,20 @@
 		<dependency>
 			<groupId>com.esotericsoftware.kryo</groupId>
 			<artifactId>kryo</artifactId>
-			<version>1.05</version>
-		</dependency>		
+			<version>2.24.0</version>
+		</dependency>
+		
+		<!-- NOTE : jzmq jars are specific to the native build so not available in external maven repositories.
+			Follow instructions at http://zeromq.org/bindings:java to make a suitable zmq.jar in the src/main/c++ folder.
+			Then, for example, for ubuntu and for zmq 3.2.2 rename file found src/main/c++/zmq.jar to jzmq-ubuntu-3.2.2.jar
+			and add to your local .m2 repository 
+			mvn install:install-file -Dfile=jzmq-ubuntu-3.2.2.jar -DgroupId=org.zeromq -DartifactId=jzmq-ubuntu -Dversion=3.2.2 -Dpackaging=jar
+		-->		
 		<dependency>
 			<groupId>org.zeromq</groupId>
 			<artifactId>jzmq-ubuntu</artifactId>
 			<version>3.2.2</version>
 		</dependency>
+		
 	</dependencies>
 </project>

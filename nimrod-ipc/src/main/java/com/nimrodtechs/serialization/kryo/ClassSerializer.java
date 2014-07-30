@@ -16,25 +16,34 @@
 
 package com.nimrodtechs.serialization.kryo;
 
-import java.nio.ByteBuffer;
-
+import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.serialize.StringSerializer;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 
 /**
  * ClassSerializer serialize java Class
  */
 public class ClassSerializer extends Serializer {
-    public Class readObjectData(ByteBuffer aBuffer, Class aType) {
+
+    @Override
+    public Object read(Kryo arg0, Input input, Class arg2) {
         try {
-            return Class.forName(StringSerializer.get(aBuffer));
+            return Class.forName(input.readString());
         } catch (Throwable t) {
-            throw new RuntimeException("Unable to read Class");
+            try {
+                throw new RuntimeException("Unable to create Class " + input.readString(),t);
+            } catch (Throwable t1) {
+                throw new RuntimeException("Unable to create Class ",t);
+            }
         }
     }
 
-    public void writeObjectData(ByteBuffer aBuffer, Object anObject) {
-        Class value = (Class) anObject;
-        StringSerializer.put(aBuffer, value.getName());
+    @Override
+    public void write(Kryo arg0, Output output, Object object) {
+        Class value = (Class)object;
+        output.writeString(value.getName());
+        
     }
 }

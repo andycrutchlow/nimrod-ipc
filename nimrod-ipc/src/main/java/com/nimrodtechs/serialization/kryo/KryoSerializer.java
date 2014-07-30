@@ -16,8 +16,11 @@
 
 package com.nimrodtechs.serialization.kryo;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,9 +29,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.ObjectBuffer;
-import com.esotericsoftware.kryo.serialize.BigDecimalSerializer;
-import com.esotericsoftware.kryo.serialize.DateSerializer;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.nimrodtechs.serialization.NimrodObjectSerializationInterface;
 
 
@@ -38,8 +40,8 @@ public class KryoSerializer implements NimrodObjectSerializationInterface {
     
     public KryoSerializer() {
         super();
-        kryo.register( BigDecimal.class, new BigDecimalSerializer() );
-        kryo.register( Date.class, new DateSerializer() );
+        kryo.register( BigDecimal.class );
+        kryo.register( Date.class );
         kryo.register( Class.class, new ClassSerializer() );
         kryo.register( HashMap.class );
         kryo.register( HashSet.class );
@@ -68,14 +70,19 @@ public class KryoSerializer implements NimrodObjectSerializationInterface {
     }
 
     public byte[] serialize(Object o) {
-        ObjectBuffer buffer = new ObjectBuffer(kryo, 1024, Integer.MAX_VALUE);
-        byte[] bytes = buffer.writeObject(o);
-        return bytes;
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        Output output = new Output(stream);
+        kryo.writeObject(output, o);
+        output.close();
+        return stream.toByteArray();
     }
 
     public Object deserialize(byte[] b, Class c) {
-        ObjectBuffer buffer = new ObjectBuffer(kryo, 1024, Integer.MAX_VALUE);
-        return buffer.readObject(b, c);
-    }
+        ByteArrayInputStream stream = new ByteArrayInputStream(b);
+        Input input = new Input(stream);
+        Object result = kryo.readObject(input, c);
+        input.close();
+        return result;
+     }
 
 }
