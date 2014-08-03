@@ -333,8 +333,9 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
             // Ensure we pickup any and all messages sent internally
             // internalSocket.subscribe(new byte[0]);
             // Initialize poll set
-            Poller items = new ZMQ.Poller(2);
-
+            
+            //TODO replace with : Poller items = new ZMQ.Poller(2);
+            Poller items = context.poller(2);
             // Always poll internal subscription requests
             items.register(internalSocket, Poller.POLLIN);
             // Always poll for external message delivery

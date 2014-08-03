@@ -297,7 +297,8 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
                     inprocThreadId.set(1);
                     inprocPool = new GenericObjectPool(new PoolConnectionFactory(context), inprocPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1);
                 }
-                this.poller = new ZMQ.Poller(2);
+                //TODO replace with : this.poller = new ZMQ.Poller(2);
+                this.poller = context.poller(2);
                 this.poller.register(frontend, ZMQ.Poller.POLLIN);
                 this.poller.register(backend, ZMQ.Poller.POLLIN);
                 byte[] msg = null;

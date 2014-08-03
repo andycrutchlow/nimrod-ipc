@@ -212,7 +212,8 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
             backend.bind(internalSocketName);
 
             // Initialize poll set
-            Poller items = new ZMQ.Poller(2);
+            //TODO replace with : Poller items = new ZMQ.Poller(2);
+            Poller items = context.poller(2);
             // Always poll for client activity on frontend
             items.register(frontend, Poller.POLLIN);
             // Always poll for worker thread responses on backend
