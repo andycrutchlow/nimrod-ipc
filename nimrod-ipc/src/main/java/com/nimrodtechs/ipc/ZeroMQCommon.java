@@ -112,9 +112,10 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
     /**
      * manyToOne = true means the socket will be written to by many (this
      * process is one of them) and read by one (another process).
+     * VERY IMPORTANT : this needs to be set before setting/calling setServerSocket ... this is weak and error prone so needs to be addressed at some point!!
      */
     protected boolean manyToOne = false;
-
+    
     public void setManyToOne(boolean manyToOne) throws Exception {
         if (this instanceof ZeroMQPubSubSubscriber == false && this instanceof ZeroMQPubSubPublisher == false)
             throw new NimrodPubSubException("setManyToOne only applicable for ZeroMQPubSubSubscriber or ZeroMQPubSubPublisher");

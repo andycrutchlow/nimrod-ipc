@@ -800,6 +800,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
                         }
                         if (frame1 == null) {
                             logger.error("frame1 == null .. treat as a timeout");
+//TODO under review : either this                            
                             if (inprocConnection.queueOut.peek() == null)
                                 inprocConnection.queueOut.put(response);
                             else {
@@ -809,6 +810,10 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
                                 else
                                     logger.error("extra info : inprocConnection.queueOut is not empty?? - contains byte[] " + o.toString());
                             }
+                            
+//TODO ... or this ...
+//                            if (inprocConnection.queueOut.peek() == null)
+//                                inprocConnection.queueOut.put(response);
                             continue;
                         }
 
