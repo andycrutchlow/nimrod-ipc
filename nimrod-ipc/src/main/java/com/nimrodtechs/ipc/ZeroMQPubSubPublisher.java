@@ -206,11 +206,11 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
             ZMQ.Socket socket = context.socket(ZMQ.PUB);
             // Decide whether to bind or connect
             if (manyToOne) {
-                socket.connect(getServerSocket());
                 logger.info("manyToOne so connect to " + getServerSocket());
+                socket.connect(getServerSocket());
             } else {
-                socket.bind(getServerSocket());
                 logger.info("oneToMany so bind to " + getServerSocket());
+                socket.bind(getServerSocket());
             }
 
             setupCondition.signal();
