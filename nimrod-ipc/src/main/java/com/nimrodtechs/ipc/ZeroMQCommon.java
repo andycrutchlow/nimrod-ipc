@@ -34,7 +34,11 @@ import com.nimrodtechs.exceptions.NimrodPubSubException;
 import com.nimrodtechs.serialization.NimrodObjectSerializationInterface;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
 import com.nimrodtechs.serialization.kryo.KryoSerializer;
-
+/**
+ * Add a desc
+ * @author nimrod
+ *
+ */
 public abstract class ZeroMQCommon implements MessageReceiverInterface {
     private static Logger logger = LoggerFactory.getLogger(ZeroMQCommon.class);
 
