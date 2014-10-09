@@ -40,7 +40,7 @@ public class TestClient {
         });
 
         //Configure the general serializer by adding a kryo serializer
-        NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
+        //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
         testServerConnection = new ZeroMQRmiClient();
         testServerConnection.setInstanceName("TestServerConnection");
         testServerConnection.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/rmiServerSocket"));

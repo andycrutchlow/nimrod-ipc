@@ -46,7 +46,7 @@ public class TestServer {
             }
         });
         //Configure the general serializer by adding a kryo serializer
-        NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
+        //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
         //Create a RMI Server
         server = new ZeroMQRmiServer();
         //Add an instance of this TestServer class as a service and its 2 associated exposed methods

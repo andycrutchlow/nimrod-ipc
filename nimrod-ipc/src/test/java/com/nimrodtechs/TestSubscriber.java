@@ -39,14 +39,15 @@ public class TestSubscriber implements MessageReceiverInterface {
         });
 
         //Configure the general serializer by adding a kryo serializer
-        NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
+        //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
         subscriber = new ZeroMQPubSubSubscriber();
         subscriber.setInstanceName("TestSubscriber");
         subscriber.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestPublisherSocket.pubsub"));
         try {
             subscriber.initialize();
-            subscriber.subscribe("testsubject", new TestSubscriber(), String.class,QueueExecutor.CONFLATING_QUEUE);
-            subscriber.subscribe("testsubject2", new TestSubscriber(), String.class);
+            //subscriber.subscribe("testsubject", new TestSubscriber(), String.class,QueueExecutor.CONFLATING_QUEUE);
+            //subscriber.subscribe("testsubject2", new TestSubscriber(), String.class);
+            subscriber.subscribe("testsubject3", new TestSubscriber(), TestDTO.class);
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -55,7 +56,12 @@ public class TestSubscriber implements MessageReceiverInterface {
 
     @Override
     public void messageReceived(String subject, Object message) {
-        logger.info("subject="+subject+" message="+message);
+    	if(message instanceof String)
+    		logger.info("subject="+subject+" message="+message);
+    	else if (message instanceof TestDTO) {
+    		TestDTO t = (TestDTO)message;
+    		logger.info("subject="+subject+" field1="+t.field1+" field2="+t.field2+" field3="+t.field3);
+    	}
         
     }
 

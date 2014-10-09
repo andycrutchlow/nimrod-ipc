@@ -46,7 +46,7 @@ public class ZeroMQAgent implements MessageReceiverInterface {
         });
         
         //Configure the general serializer by adding a kryo serializer
-        NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
+        //NimrodObjectSerializer.GetInstance().getSerializers().put(NimrodObjectSerializer.DEFAULT_SERIALIZATION_ID,new KryoSerializer());
         try {
             zeroMQAgent = new ZeroMQAgent();
             

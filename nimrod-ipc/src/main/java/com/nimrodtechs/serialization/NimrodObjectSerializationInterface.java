@@ -22,4 +22,7 @@ public interface NimrodObjectSerializationInterface {
     public byte[] serialize(Object o);
     
     public Object deserialize(byte[] b, Class c) throws NimrodSerializationException;
+    
+    public void register(Class c, int id);
+    public void register(Class c, Object serializer, int id);
 }

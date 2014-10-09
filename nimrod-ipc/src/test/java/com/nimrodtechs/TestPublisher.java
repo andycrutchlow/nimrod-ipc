@@ -35,7 +35,7 @@ public class TestPublisher implements InstanceEventReceiverInterface {
             }
         });
         // Configure the general serializer by adding a kryo serializer
-        NimrodObjectSerializer.GetInstance().getSerializers().put("kryo", new KryoSerializer());
+        //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo", new KryoSerializer());
         // Add event listener that will be called (if agent is running) when subscriber 'TestSubscriber' is started
         ZeroMQCommon.addInstanceEventReceiver("TestSubscriber", instance);
         publisher = new ZeroMQPubSubPublisher();
@@ -45,8 +45,13 @@ public class TestPublisher implements InstanceEventReceiverInterface {
             // Initialize
             publisher.initialize();
             for (int i = 0; i < 1000; i++) {
-                publisher.publish("testsubject", "testmessage");
-                publisher.publish("testsubject2", "testmessage2");
+                //publisher.publish("testsubject", "testmessage");
+                //publisher.publish("testsubject2", "testmessage2");
+            	TestDTO t = new TestDTO();
+            	t.setField1("HELLO");
+            	t.setField2(i);
+            	t.setField3(i);
+                publisher.publish("testsubject3", t);
                 Thread.sleep(2000);
             }
             publisher.dispose();

@@ -41,7 +41,6 @@ import com.nimrodtechs.serialization.kryo.KryoSerializer;
  */
 public abstract class ZeroMQCommon implements MessageReceiverInterface {
     private static Logger logger = LoggerFactory.getLogger(ZeroMQCommon.class);
-
     protected static Context context;
     protected final static String INTERNAL_SOCKET_NAME_PREFIX = "inproc://inproc";
     protected final static String SHUTDOWN_TASKNAME = "shutdowntask";
@@ -165,8 +164,8 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
 
         }
 
-        if (NimrodObjectSerializer.GetInstance().getSerializers().size() == 0)
-            NimrodObjectSerializer.GetInstance().getSerializers().put("kryo", new KryoSerializer());
+//        if (NimrodObjectSerializer.GetInstance().getSerializers().size() == 0)
+//            NimrodObjectSerializer.GetInstance().getSerializers().put(NimrodObjectSerializer.DEFAULT_SERIALIZATION_ID, new KryoSerializer());
 
         // TODO This needs a bit more work..if there are multiples then need to
         // pass in which is default

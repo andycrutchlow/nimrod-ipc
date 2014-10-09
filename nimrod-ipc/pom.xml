@@ -11,8 +11,10 @@
 		<maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
 		<logback.version>1.0.13</logback.version>
 		<slf4j.version>1.7.7</slf4j.version>
+		<!-- 
 		<mvn.log4j.rootCategory>WARN</mvn.log4j.rootCategory>
 		<mvn.log4j.category.org.springframework.beans.factory>WARN</mvn.log4j.category.org.springframework.beans.factory>
+		 -->
 	</properties>
 
 	<build>
@@ -67,9 +69,9 @@
 			<version>1.4</version>
 		</dependency>
 		<dependency>
-			<groupId>com.esotericsoftware.kryo</groupId>
+			<groupId>com.esotericsoftware</groupId>
 			<artifactId>kryo</artifactId>
-			<version>2.24.0</version>
+			<version>3.0.0</version>
 		</dependency>
 		
 		<!-- NOTE : jzmq jars are specific to the native build so not available in external maven repositories.
@@ -80,7 +82,7 @@
 		-->		
 		<dependency>
 			<groupId>org.zeromq</groupId>
-			<artifactId>jzmq-ubuntu</artifactId>
+			<artifactId>jzmq</artifactId>
 			<version>3.2.2</version>
 		</dependency>
 		

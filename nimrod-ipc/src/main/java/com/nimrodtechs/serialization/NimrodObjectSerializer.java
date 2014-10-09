@@ -21,8 +21,12 @@ import java.util.Map;
 
 import com.nimrodtechs.exceptions.NimrodSerializationException;
 import com.nimrodtechs.exceptions.NimrodSerializerNotFoundException;
+import com.nimrodtechs.serialization.kryo.KryoSerializer;
 
 public class NimrodObjectSerializer {
+	
+    public final static String DEFAULT_SERIALIZATION_ID = "kryo";
+
     private static Map<String, NimrodObjectSerializationInterface> serializers = new HashMap<String, NimrodObjectSerializationInterface>();
 
     public Map<String, NimrodObjectSerializationInterface> getSerializers() {
@@ -38,6 +42,7 @@ public class NimrodObjectSerializer {
     NimrodObjectSerializer()
     {
         instance = this;
+        serializers.put(DEFAULT_SERIALIZATION_ID,new KryoSerializer());
     }
     
     public static NimrodObjectSerializer GetInstance() {
@@ -69,4 +74,29 @@ public class NimrodObjectSerializer {
             throw new NimrodSerializationException(t);
         }
     }
+
+    public static void register(String serializerId, Class c, int id)
+    {
+        NimrodObjectSerializationInterface s = serializers.get(serializerId);
+        if(s == null)
+            return;
+        try {
+            s.register(c,id);
+        } catch (Throwable t) {
+            return;
+        }
+    }
+    
+    public static void register(String serializerId, Class c, Object o, int id)
+    {
+        NimrodObjectSerializationInterface s = serializers.get(serializerId);
+        if(s == null)
+            return;
+        try {
+            s.register(c,o,id);
+        } catch (Throwable t) {
+            return;
+        }
+    }
+
 }
