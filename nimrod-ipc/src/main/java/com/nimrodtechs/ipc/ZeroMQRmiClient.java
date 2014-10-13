@@ -209,9 +209,11 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
         initializeQueue();
         initializeHeartbeat();
         
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer(); 
-        ObjectName mxbeanName = new ObjectName("com.nimrodtechs:type=ZeroMQRmiClient");
-        mbs.registerMBean(this, mxbeanName);
+        
+        //TODO CHECK IF ALREADY REGISTERED...IF NOT THEN REGISTER
+//        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer(); 
+//        ObjectName mxbeanName = new ObjectName("com.nimrodtechs:type=ZeroMQRmiClient");
+//        mbs.registerMBean(this, mxbeanName);
                      
         
         //Indicates that subsequent calls to initialize is NOT the first time
