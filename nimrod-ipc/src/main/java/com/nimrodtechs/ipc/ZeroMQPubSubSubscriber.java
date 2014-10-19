@@ -217,7 +217,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
             }
             // list.remove(listener);
             if (list.size() == 0) {
-                logger.info("unsubscribe : subject [" + subject + "] count is now 0 so unsubscribe");
+                logger.info("unsubscribe : subject [" + subject + "] listener count is now 0 so remove from map");
                 // Do the actual unsubscribe from transport
                 if (listenersBySubjectMap.remove(subject) == null)
                     logger.warn("unsubscribe : subject [" + subject + "] count was 0 but entry missing");
@@ -276,7 +276,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
      * 
      */
     private void unsubscribe(String subject) {
-        logger.info("unsubscribe : subject [" + subject + "] count is now 0 so unsubscribe");
+        logger.info("unsubscribe : subject [" + subject + "] count is now 0 so actually unsubscribe");
         // If there are now more listeners then remove all aspects of
         // the subscription
         Socket client;
@@ -284,7 +284,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
             // client = context.socket(ZMQ.PUB);
             client = context.socket(ZMQ.REQ);
         }
-        client.connect(internalSocketName + thisInstanceId);
+        client.connect(internalSocketName);
 
         // Communicate to the main subscriber thread to remove this
         // subscription..
