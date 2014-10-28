@@ -53,6 +53,9 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
     protected ConcurrentMap<String, MessageProcessorEntry> messageProcessorEntries = new ConcurrentHashMap<String, MessageProcessorEntry>();
     protected List<String> wildcardSubjects = new ArrayList<String>();
     protected QueueExecutor sequentialExecutor = null;
+    public void setSequentialExecutor(QueueExecutor sequentialExecutor) {
+    	this.sequentialExecutor = sequentialExecutor;
+    }
     public QueueExecutor getSequentialExecutor() {
         if(sequentialExecutor == null) {
             sequentialExecutor = new SequentialExecutor();
@@ -148,7 +151,12 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
                 list = new ArrayList<MessageReceiverInterface>();
                 listenersBySubjectMap.put(subject, list);
             }
-            list.add(listener);
+            if(list.contains(listener) == false)
+            	list.add(listener);
+            else {
+            	logger.warn("ZmqMessageSubscriber:subscribe "+aSubject+" already contains the listener "+listener.toString());
+            	return;
+            }
             if (list.size() == 1) {
                 // Setup a queue for messages for this subject
                 MessageProcessorEntry mpe = new MessageProcessorEntry();

@@ -217,7 +217,12 @@ public abstract class QueueExecutor implements UncaughtExceptionHandler {
                             }
 
                         } catch (Throwable t) {
-                            logger.error("Exception occured calling eventReceived for subject " + subject + " in listenter " + list.get(i).getClass().getName(), t);
+                        
+                        	try {
+								logger.error("Exception occured calling eventReceived for subject " + subject + " in listenter " + list.get(i).getClass().getName(), t);
+							} catch (Throwable e) {
+								logger.error("Exception occured calling eventReceived for subject " + subject + " in listenter " , t);
+							}
                         }
                     }
                 }

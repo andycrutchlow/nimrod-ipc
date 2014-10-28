@@ -31,6 +31,8 @@ import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 
 import com.nimrodtechs.exceptions.NimrodPubSubException;
+import com.nimrodtechs.ipc.queue.QueueExecutor;
+import com.nimrodtechs.ipc.queue.SequentialExecutor;
 import com.nimrodtechs.serialization.NimrodObjectSerializationInterface;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
 import com.nimrodtechs.serialization.kryo.KryoSerializer;
@@ -254,6 +256,11 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
         agentSubscriber.setInstanceName("agentSubscriber");
         try {
             agentSubscriber.initialize();
+            QueueExecutor sequentialExecutor = new SequentialExecutor();
+            sequentialExecutor.setThreadNamePrefix(agentSubscriber.getInstanceName());
+            sequentialExecutor.setThreadPoolSize(1);
+            sequentialExecutor.initialize();
+            agentSubscriber.setSequentialExecutor(sequentialExecutor);
             agentSubscriber.subscribe(ZeroMQCommon.AGENT_SUBJECT_PREFIX + INSTANCE_SUFFIX, this, String.class);
         } catch (Exception e) {
             logger.error("initializeAgentOutboundSocket : failed", e);
