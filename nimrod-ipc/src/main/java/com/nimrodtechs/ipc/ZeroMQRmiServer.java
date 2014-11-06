@@ -170,6 +170,7 @@ public class ZeroMQRmiServer extends ZeroMQCommon {
         }
 
         createWorkerThreads();
+        initializeAgent();
         return true;
     }
 

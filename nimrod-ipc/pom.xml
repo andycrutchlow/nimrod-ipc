@@ -79,16 +79,19 @@
 			Then, for example, for ubuntu and for zmq 3.2.2 rename file found src/main/c++/zmq.jar to jzmq-ubuntu-3.2.2.jar
 			and add to your local .m2 repository 
 			mvn install:install-file -Dfile=jzmq-ubuntu-3.2.2.jar -DgroupId=org.zeromq -DartifactId=jzmq-ubuntu -Dversion=3.2.2 -Dpackaging=jar
+		-->
+		
 		<dependency>
 			<groupId>org.zeromq</groupId>
 			<artifactId>jzmq</artifactId>
 			<version>3.2.2</version>
 		</dependency>
-		-->
+		<!--  
 		<dependency>
 			<groupId>org.zeromq</groupId>
 			<artifactId>jeromq</artifactId>
 			<version>0.3.4</version>
 		</dependency>
+		-->
 	</dependencies>
 </project>

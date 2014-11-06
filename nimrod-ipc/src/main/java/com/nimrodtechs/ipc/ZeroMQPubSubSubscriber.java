@@ -102,7 +102,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
                 setupLock.unlock();
         }
         //Notify the outside world that this instance is running
-        initializeAgent();
+        //initializeAgent();
         
         logger.info("Initialized connection on " + clientSocket);
         return true;

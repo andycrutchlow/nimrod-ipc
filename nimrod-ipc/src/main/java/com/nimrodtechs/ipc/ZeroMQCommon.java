@@ -241,7 +241,7 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
 
     protected void initializeAgent() {
         // Only initialize agent stuff once
-        if (agentSubscriber != null || agentPublisher != null)
+        if ((agentSubscriber != null || agentPublisher != null) && this instanceof ZeroMQRmiServer == false)
             return;
         if (instanceName.equals("agentSubscriber") == false && instanceName.equals("agentPublisher") == false && getZeroMQAgentOutboundSocketUrl() != null && getZeroMQAgentInboundSocketUrl() != null) {
             initializeAgentSubscriber();
@@ -251,6 +251,8 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
     }
 
     protected void initializeAgentSubscriber() {
+    	if(agentSubscriber != null)
+    		return;
         agentSubscriber = new ZeroMQPubSubSubscriber();
         agentSubscriber.setServerSocket(getZeroMQAgentOutboundSocketUrl());
         agentSubscriber.setInstanceName("agentSubscriber");
