@@ -17,12 +17,14 @@
 package com.nimrodtechs.ipc.queue;
 
 import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MessageProcessorEntry {
     protected AtomicBoolean inProgressIndicator = new AtomicBoolean(false);
-    protected Queue<MessageWrapper> messages = new ConcurrentLinkedQueue<MessageWrapper>();
+    //protected Queue<MessageWrapper> messages = new ConcurrentLinkedQueue<MessageWrapper>();
+    protected Queue<MessageWrapper> messages = new ArrayBlockingQueue<MessageWrapper>(QueueExecutor.MAX_QUEUE);
     protected MessageWrapper[] conflatedMessages = new MessageWrapper[2];
     protected QueueExecutor queueExecutor;
     protected String serviceName;

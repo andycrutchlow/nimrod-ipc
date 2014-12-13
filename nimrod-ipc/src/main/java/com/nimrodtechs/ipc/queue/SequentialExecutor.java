@@ -36,7 +36,16 @@ public class SequentialExecutor extends QueueExecutor {
     @Override
     public void process(String subject, String actualSubject, byte[] message, MessageProcessorEntry mpe, ConcurrentMap<String, List<? extends MessageReceiverInterface>> listeners) {
         // This is the sequential flavor so just add to end of current list
-        mpe.messages.offer(new MessageWrapper(actualSubject, message));
+        if(mpe.messages.size() > warningThreshold) {
+        	//Log an error and return for now..
+        	if(mpe.messages.size() == MAX_QUEUE) {
+            	logger.error("Queue size is "+mpe.messages.size()+" which is = max size "+MAX_QUEUE+" so skip ... this is serious!!!!");
+            	return;
+        	} else {
+            	logger.warn("Queue size is "+mpe.messages.size()+" which is greater than threashold "+warningThreshold);
+        	}
+        }
+    	mpe.messages.offer(new MessageWrapper(actualSubject, message));
         if (mpe.getInprogressIndicator().compareAndSet(false, true)) {
             // A current thread is not inprogress so start one
             serviceThreads.execute(new ServiceMessageTask(subject, mpe, listeners));

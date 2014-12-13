@@ -45,7 +45,7 @@ public abstract class QueueExecutor implements UncaughtExceptionHandler {
     public final static int SEQUENTIAL_QUEUE = 0;
     public final static int CONFLATING_QUEUE = 1;
     private String threadNamePrefix = "qxf-Dispatcher";
-
+    public final static int MAX_QUEUE = 1024;
     public void setThreadNamePrefix(String threadNamePrefix) {
         if (this instanceof ConflatingExecutor)
             this.threadNamePrefix = "qxfc-" + threadNamePrefix;
@@ -53,7 +53,7 @@ public abstract class QueueExecutor implements UncaughtExceptionHandler {
             this.threadNamePrefix = "qxfs-" + threadNamePrefix;
     }
 
-    private int warningThreshold = 0;
+    protected int warningThreshold = MAX_QUEUE - 100;
 
     public void setWarningThreshold(int warningThreshold) {
         this.warningThreshold = warningThreshold;
@@ -213,7 +213,11 @@ public abstract class QueueExecutor implements UncaughtExceptionHandler {
                             if (messageToPassOn == null)
                                 logger.error("data on subject " + subject + " is null - ignore..");
                             else {
-                                ((MessageReceiverInterface) list.get(i)).messageReceived(messageWrapper.actualSubject, messageToPassOn);
+                            	try {
+                            		((MessageReceiverInterface) list.get(i)).messageReceived(messageWrapper.actualSubject, messageToPassOn);
+                            	} catch (IndexOutOfBoundsException iobe) {
+                            		//Do nothing .. means that something else has unsubscribed between getting list above and now
+                            	}
                             }
 
                         } catch (Throwable t) {
