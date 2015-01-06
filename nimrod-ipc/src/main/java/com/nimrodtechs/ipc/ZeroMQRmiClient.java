@@ -1071,9 +1071,8 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
                             // heartbeat problem..but continue as is...
                             connectedMadeAtDateTime = null;
                             if (stopped == false) {
-//PUT THIS BACK!!!                        
-//                                if (logCnt++ % 10 == 0)
-//                                    logger.info("Connection to Server NOT detected on channel " + externalSocketURL.get(currentExternalSocketEntry) + "..will retry.");
+                                if (logCnt++ % 10 == 0)
+                                    logger.info("Connection to Server NOT detected on channel " + externalSocketURL.get(currentExternalSocketEntry) + "..will retry.");
 
                             	// NEED TO SEND MESSAGE TO QueueTask to tell it
                                 // to reply to any/all callsInProgress ..and
