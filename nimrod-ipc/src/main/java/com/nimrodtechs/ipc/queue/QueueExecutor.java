@@ -153,7 +153,7 @@ public abstract class QueueExecutor implements UncaughtExceptionHandler {
      * This ensures messages for the same subject that arrive in short/same
      * period of time get processed in order by the same thread if there is a
      * backlog. A later message cannot over take an earlier one no matter how
-     * long an messageReceived takes.
+     * long a messageReceived method takes.
      * 
      * @author andy
      * 

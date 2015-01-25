@@ -65,6 +65,9 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         return sequentialExecutor;
     }
     protected QueueExecutor conflatingExecutor = null;
+    public void setConflatingExecutor(QueueExecutor conflatingExecutor) {
+    	this.conflatingExecutor = conflatingExecutor;
+    }
     public QueueExecutor getConflatingExecutor() {
         if(conflatingExecutor == null) {
             conflatingExecutor = new ConflatingExecutor();
@@ -123,6 +126,12 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         logger.warn("ZmqMessageSubscriber sent STOP message");
         client.recv(0);
         logger.warn("ZmqMessageSubscriber recvd STOP ack");
+        if(sequentialExecutor != null) {
+        	sequentialExecutor.dispose();
+        }
+        if(conflatingExecutor != null) {
+        	conflatingExecutor.dispose();
+        }
     }
     
     public void subscribe(String aSubject, MessageReceiverInterface listener, Class payloadClass, int executorType) {

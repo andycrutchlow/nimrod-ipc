@@ -59,6 +59,7 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
     protected static final String AGENT_SUBJECT_PREFIX = "nimrod.agent.";
     protected static final String INITIAL_VALUES_SUFFIX = "initialValues";
     protected static final String INSTANCE_SUFFIX = "instance";
+    protected static final String IPC_TIME_SUFFIX = "ipctime";
 
     protected static final byte[] ZERO_AS_BYTES = "0".getBytes();
     protected static final byte[] ONE_AS_BYTES = "1".getBytes();
@@ -70,6 +71,7 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
 
     private static Map<String, ZeroMQCommon> instances = new HashMap<String, ZeroMQCommon>();
     private static Map<String, List<InstanceEventReceiverInterface>> instanceEventReceivers = new HashMap<String, List<InstanceEventReceiverInterface>>();
+    private static List<IpcTimeEventReceiverInterface> ipcTimeEventReceivers = new ArrayList<IpcTimeEventReceiverInterface>();
 
     protected ConcurrentHashMap<String, byte[]> lastValueCache = new ConcurrentHashMap<String, byte[]>();
 
@@ -264,6 +266,7 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
             sequentialExecutor.initialize();
             agentSubscriber.setSequentialExecutor(sequentialExecutor);
             agentSubscriber.subscribe(ZeroMQCommon.AGENT_SUBJECT_PREFIX + INSTANCE_SUFFIX, this, String.class);
+            agentSubscriber.subscribe(ZeroMQCommon.AGENT_SUBJECT_PREFIX + IPC_TIME_SUFFIX, this, String.class);
         } catch (Exception e) {
             logger.error("initializeAgentOutboundSocket : failed", e);
         }
@@ -279,6 +282,17 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
         } catch (Exception e) {
             logger.error("initializeAgentInboundSocket : failed", e);
         }
+    }
+    
+    public static void PublishIpcTimeEvent(long time) {
+    	if(agentPublisher != null) {
+    		long offset = time - System.currentTimeMillis();
+    		agentPublisher.publish(AGENT_SUBJECT_PREFIX + IPC_TIME_SUFFIX, Long.toString(offset));
+//    		try {
+//				Thread.sleep(5000);
+//			} catch (InterruptedException e) {
+//			}
+    	}
     }
 
     protected void dispose() {
@@ -311,6 +325,17 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
         }
     }
 
+    public static void addIpcTimeEventReceiver(IpcTimeEventReceiverInterface listener) {
+    	if (ipcTimeEventReceivers.contains(listener) == false) {
+    		ipcTimeEventReceivers.add(listener);
+        }
+    }
+    public static void removeIpcTimeEventReceiver(IpcTimeEventReceiverInterface listener) {
+    	if (ipcTimeEventReceivers.contains(listener) == false) {
+    		ipcTimeEventReceivers.remove(listener);
+        }
+    }
+    
     @Override
     public void messageReceived(String subject, Object message) {
         if (subject.equals(AGENT_SUBJECT_PREFIX + INITIAL_VALUES_SUFFIX)) {
@@ -329,6 +354,12 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
             int instanceStatus = Integer.parseInt(parts[2]);
             for (int i = 0; i < listeners.size(); i++) {
                 listeners.get(i).instanceEvent(parts[0], parts[1], instanceStatus);
+            }
+        } else if (subject.equals(AGENT_SUBJECT_PREFIX + IPC_TIME_SUFFIX)) {
+            // Notity listeners for this event
+            long offset = Long.parseLong((String)message);
+            for (int i = 0; i < ipcTimeEventReceivers.size(); i++) {
+            	ipcTimeEventReceivers.get(i).ipcTimeEvent(offset);
             }
         }
     }
