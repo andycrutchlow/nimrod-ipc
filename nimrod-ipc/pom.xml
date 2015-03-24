@@ -28,6 +28,35 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.3</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>com.mkyong.core.utils.App</mainClass>
+								</transformer>
+							</transformers>
+							<!-- 
+							<artifactSet>
+	                			<excludes>
+	                  				<exclude>org.zeromq:jzmq</exclude>
+	                			</excludes>
+              				</artifactSet>
+              				 -->
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
 		</plugins>
 	</build>
 
@@ -83,7 +112,7 @@
 		
 		<dependency>
 			<groupId>org.zeromq</groupId>
-			<artifactId>jzmq</artifactId>
+			<artifactId>jzmq-ubuntu1410</artifactId>
 			<version>3.2.2</version>
 		</dependency>
 		<!--  

@@ -1207,6 +1207,25 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
         client.close();
         return response;
     }
+    
+	public void addEventListener(final NimrodRmiEventListener listener)
+	{
+		if(eventListeners.contains(listener)==false)
+		{
+			eventListeners.add(listener);
+//			Thread thread = new Thread("notifyConnectionEstablished") {
+//				public void run() {
+//					listener.onConnectionEstablished(instance);
+//				}
+//			};
+//			thread.start();
+		}
+	}
+	
+	public void removeEventListener(NimrodRmiEventListener listener) {
+		eventListeners.remove(listener);
+	}
+
 
     private void notifyConnectionEstablished() {
         logger.info("Connection to Server on channel " + externalSocketURL.get(currentExternalSocketEntry) + " ESTABLISHED");

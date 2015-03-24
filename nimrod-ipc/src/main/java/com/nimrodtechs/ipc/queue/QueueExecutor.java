@@ -45,7 +45,7 @@ public abstract class QueueExecutor implements UncaughtExceptionHandler {
     public final static int SEQUENTIAL_QUEUE = 0;
     public final static int CONFLATING_QUEUE = 1;
     private String threadNamePrefix = "qxf-Dispatcher";
-    public final static int MAX_QUEUE = 1024;
+    public final static int MAX_QUEUE = 5096;
     public void setThreadNamePrefix(String threadNamePrefix) {
         if (this instanceof ConflatingExecutor)
             this.threadNamePrefix = "qxfc-" + threadNamePrefix;

@@ -33,7 +33,11 @@ import com.nimrodtechs.exceptions.NimrodSerializationException;
 import com.nimrodtechs.exceptions.NimrodSerializerNotFoundException;
 import com.nimrodtechs.serialization.NimrodObjectSerializationInterface;
 import com.nimrodtechs.serialization.NimrodObjectSerializer;
-
+/**
+ * TODO ... need a periodic publish to a keepalive message to stop established sockets being dropped.
+ * @author andy
+ *
+ */
 public class ZeroMQPubSubPublisher extends ZeroMQCommon {
     final static Logger logger = LoggerFactory.getLogger(ZeroMQPubSubPublisher.class);
 
@@ -44,9 +48,9 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
     private Thread publisherThread;
 
     /**
-     * If we ever get 1024 messages behind then we are in big trouble...
+     * If we ever get 2048 messages behind then we are in big trouble...
      */
-    private static int queueSize = 1024;
+    private static int queueSize = 2048;
     private final BlockingQueue<List<byte[]>> queue = new ArrayBlockingQueue<List<byte[]>>(queueSize);
     private static int alertLevel = queueSize / 10;
 
@@ -88,19 +92,15 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
 
     public void dispose()
     {
-        super.dispose();
-        if ( queue.remainingCapacity()  < queueSize  )
-        {
-            try
-            {
-                //Give it a chance to close and flush before returning..
-                Thread.sleep(1000);
-            }
-            catch (InterruptedException e)
-            {
-            }
-        }
-        keepRunning = false;
+		super.dispose();
+		if (queue.remainingCapacity() < queueSize) {
+			try {
+				// Give it a chance to close and flush before returning..
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			}
+		}
+       keepRunning = false;
         
         publisherThread.interrupt();
     }

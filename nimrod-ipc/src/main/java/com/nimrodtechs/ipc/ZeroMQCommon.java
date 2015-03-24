@@ -73,7 +73,7 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
     private static Map<String, List<InstanceEventReceiverInterface>> instanceEventReceivers = new HashMap<String, List<InstanceEventReceiverInterface>>();
     private static List<IpcTimeEventReceiverInterface> ipcTimeEventReceivers = new ArrayList<IpcTimeEventReceiverInterface>();
 
-    protected ConcurrentHashMap<String, byte[]> lastValueCache = new ConcurrentHashMap<String, byte[]>();
+    protected HashMap<String, byte[]> lastValueCache = new HashMap<String, byte[]>(10000);
 
     protected static int TIMEOUT = 2000;
     protected static int RETRY = 3;
