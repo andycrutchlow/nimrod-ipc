@@ -53,13 +53,21 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
     protected ConcurrentMap<String, MessageProcessorEntry> messageProcessorEntries = new ConcurrentHashMap<String, MessageProcessorEntry>();
     protected List<String> wildcardSubjects = new ArrayList<String>();
     protected QueueExecutor sequentialExecutor = null;
-    public void setSequentialExecutor(QueueExecutor sequentialExecutor) {
+    
+    protected int threadPoolSize = -1;
+    
+    public void setThreadPoolSize(int threadPoolSize) {
+		this.threadPoolSize = threadPoolSize;
+	}
+	public void setSequentialExecutor(QueueExecutor sequentialExecutor) {
     	this.sequentialExecutor = sequentialExecutor;
     }
     public QueueExecutor getSequentialExecutor() {
         if(sequentialExecutor == null) {
             sequentialExecutor = new SequentialExecutor();
             sequentialExecutor.setThreadNamePrefix(instanceName);
+            if(threadPoolSize != -1)
+            	sequentialExecutor.setThreadPoolSize(threadPoolSize);
             sequentialExecutor.initialize();
         }
         return sequentialExecutor;
@@ -72,6 +80,8 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         if(conflatingExecutor == null) {
             conflatingExecutor = new ConflatingExecutor();
             conflatingExecutor.setThreadNamePrefix(instanceName);
+            if(threadPoolSize != -1)
+            	conflatingExecutor.setThreadPoolSize(threadPoolSize);
             conflatingExecutor.initialize();
         }
         return conflatingExecutor;
@@ -106,7 +116,9 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         }
         //Notify the outside world that this instance is running
         //initializeAgent();
-        
+        //Always subscribe to keepAliveSubject
+        subscribe(KEEPALIVE_SUBJECT);
+
         logger.info("Initialized connection on " + clientSocket);
         return true;
     }
@@ -281,6 +293,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         client.send(subject.getBytes(), 0);
         logger.info("subscribe : sent ADD message for subject " + subject);
         // Receive the acknowledgement
+        //TODO ... need a timeout here inncase it never returns!!!!
         client.recv(0);
         logger.info("subscribe : recvd ack for subject " + subject);
         client.close();
@@ -361,6 +374,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
             setupCompleted = true;
             setupCondition.signal();
             setupLock.unlock();
+            
             // Main loop
             while (!Thread.currentThread().isInterrupted() && keepRunning) {
                 items.poll();
@@ -404,7 +418,15 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
                         // A new message has arrived..delegate to a thread and
                         // which
                         // in turn will call listeners
-                        String subject = new String(externalSocket.recv(0));
+                    	byte[] subjectBytes = externalSocket.recv(0);
+                    	if(subjectBytes[0] == KEEPALIVE_SUBJECT_CHAR) {
+                    		//System.out.println(" keepAlive received");
+                    		//Don't care about message payload
+                    		externalSocket.recv(0);
+                    		hasMore = externalSocket.hasReceiveMore();
+                    		continue;
+                    	}
+                        String subject = new String(subjectBytes);
                         byte[] message = externalSocket.recv(0);
                         totalMsgs++;
                         // Dispatch the new message to the registered
@@ -434,16 +456,15 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
             // Pass on to the appropriate executor to process the message
             mpe.getQueueExecutor().process(subject, subject, message, mpe, listenersBySubjectMap);
         }
-        if (wildcardSubjects.size() > 0) {
-            for (String wildcardSubject : wildcardSubjects) {
-                if (subject.length() > wildcardSubject.length()) {
-                    if (subject.substring(0, wildcardSubject.length()).equals(wildcardSubject)) {
-                        mpe = messageProcessorEntries.get(wildcardSubject);
-                        if (mpe != null) {
-                            // Pass on to the appropriate executor to process
-                            // the message
-                            mpe.getQueueExecutor().process(wildcardSubject, subject, message, mpe, listenersBySubjectMap);
-                        }
+        for (int i=0;i<wildcardSubjects.size();i++) {
+        	String wildcardSubject = wildcardSubjects.get(i);
+            if (subject.length() > wildcardSubject.length()) {
+                if (subject.substring(0, wildcardSubject.length()).equals(wildcardSubject)) {
+                    mpe = messageProcessorEntries.get(wildcardSubject);
+                    if (mpe != null) {
+                        // Pass on to the appropriate executor to process
+                        // the message
+                        mpe.getQueueExecutor().process(wildcardSubject, subject, message, mpe, listenersBySubjectMap);
                     }
                 }
             }

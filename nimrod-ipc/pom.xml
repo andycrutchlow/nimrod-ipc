@@ -28,6 +28,7 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
+			 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -42,7 +43,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.mkyong.core.utils.App</mainClass>
+									<mainClass>com.nimrodtechs.ipc.ZeroMQAgent</mainClass>
 								</transformer>
 							</transformers>
 							<!-- 
@@ -51,7 +52,7 @@
 	                  				<exclude>org.zeromq:jzmq</exclude>
 	                			</excludes>
               				</artifactSet>
-              				 -->
+              				 --> 
 						</configuration>
 					</execution>
 				</executions>

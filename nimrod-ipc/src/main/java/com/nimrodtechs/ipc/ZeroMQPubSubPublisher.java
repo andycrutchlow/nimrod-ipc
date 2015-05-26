@@ -18,6 +18,8 @@ package com.nimrodtechs.ipc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,8 +48,13 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
     private ReentrantLock setupLock = new ReentrantLock();
     private Condition setupCondition = setupLock.newCondition();
     private Thread publisherThread;
+    private Timer timer;
+    private int keepAliveInterval = 60000;
+    public void setKeepAliveInterval(int keepAliveInterval) {
+		this.keepAliveInterval = keepAliveInterval;
+	}
 
-    /**
+	/**
      * If we ever get 2048 messages behind then we are in big trouble...
      */
     private static int queueSize = 2048;
@@ -75,11 +82,16 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
             publisherThread.start();
             setupCondition.await();
             Thread.sleep(100);
-            initializeAgent();
+            if(lastValuePublish) {
+            	initializeAgent();
+            }
             if(getInstanceName() != null && getInstanceName().equals("agentPublisher") == false &&  getInstanceName().equals("agentSubscriber") == false && agentSubscriber != null) {
                 agentSubscriber.subscribe(AGENT_SUBJECT_PREFIX+INITIAL_VALUES_SUFFIX, this, String.class);
             }
-            
+            if(serverSocket != null && serverSocket.startsWith("tcp")) {
+	            timer = new Timer(getInstanceName() + "-" + thisInstanceId+"-keepAliveTimer");
+	            timer.schedule(new KeepAliveTask(), keepAliveInterval,keepAliveInterval);
+            }
             logger.info(getInstanceName() + " initialized.");
         } catch (InterruptedException ie) {
 
@@ -88,6 +100,13 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
                 setupLock.unlock();
         }
         return true;
+    }
+    
+    class KeepAliveTask extends TimerTask {
+        @Override
+        public void run() {
+        	publish(defaultSerializerId, KEEPALIVE_SUBJECT, "keepalive",false);
+        }
     }
 
     public void dispose()
@@ -101,8 +120,9 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
 			}
 		}
        keepRunning = false;
-        
-        publisherThread.interrupt();
+       if(timer != null)
+    	   timer.cancel();
+       publisherThread.interrupt();
     }
     
     public static void publishOnInstance(String instanceName, String subject, Object message) throws NimrodPubSubException    {

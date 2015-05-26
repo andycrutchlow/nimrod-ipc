@@ -55,7 +55,8 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
     protected static final String INPROC_PREFIX = "zmqInproc-";
     protected static final String PUBLISHER_PREFIX = "zmqPub-";
     protected static final String SUBSCRIBER_PREFIX = "zmqSub-";
-
+    protected static final String KEEPALIVE_SUBJECT = "^";
+    protected static final char KEEPALIVE_SUBJECT_CHAR = '^';
     protected static final String AGENT_SUBJECT_PREFIX = "nimrod.agent.";
     protected static final String INITIAL_VALUES_SUFFIX = "initialValues";
     protected static final String INSTANCE_SUFFIX = "instance";
@@ -128,8 +129,18 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
             throw new NimrodPubSubException("setManyToOne only applicable for ZeroMQPubSubSubscriber or ZeroMQPubSubPublisher");
         this.manyToOne = manyToOne;
     }
+    
+    protected boolean lastValuePublish = true;
 
-    protected static String zeroMQAgentInboundSocketUrl = System.getProperty("zeroMQAgentInboundSocketUrl", "ipc://" + System.getProperty("java.io.tmpdir") + "/zeroMQAgentInboundSocketUrl.pubsub");
+    public boolean isLastValuePublish() {
+		return lastValuePublish;
+	}
+
+	public void setLastValuePublish(boolean lastValuePublish) {
+		this.lastValuePublish = lastValuePublish;
+	}
+
+	protected static String zeroMQAgentInboundSocketUrl = System.getProperty("zeroMQAgentInboundSocketUrl", "ipc://" + System.getProperty("java.io.tmpdir") + "/zeroMQAgentInboundSocketUrl.pubsub");
 
     public static String getZeroMQAgentInboundSocketUrl() {
         return zeroMQAgentInboundSocketUrl;
