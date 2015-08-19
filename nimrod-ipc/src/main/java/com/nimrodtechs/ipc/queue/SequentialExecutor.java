@@ -39,10 +39,11 @@ public class SequentialExecutor extends QueueExecutor {
         if(mpe.messages.size() > warningThreshold) {
         	//Log an error and return for now..
         	if(mpe.messages.size() == MAX_QUEUE) {
-            	logger.error("Queue size is "+mpe.messages.size()+" which is = max size "+MAX_QUEUE+" so skip ... this is serious!!!!");
+            	logger.error(subject+" Queue size is "+mpe.messages.size()+" which is = max size "+MAX_QUEUE+" so skip ... this is serious!!!!");
             	return;
         	} else {
-            	logger.warn("Queue size is "+mpe.messages.size()+" which is greater than threashold "+warningThreshold);
+        		//Uncomment this if needed...but act of logging will affect flushing queue
+            	//logger.warn("Queue size is "+mpe.messages.size()+" which is greater than threshold "+warningThreshold);
         	}
         }
     	mpe.messages.offer(new MessageWrapper(actualSubject, message));
