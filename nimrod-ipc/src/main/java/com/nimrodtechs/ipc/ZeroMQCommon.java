@@ -58,6 +58,7 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
     protected static final String KEEPALIVE_SUBJECT = "^";
     protected static final char KEEPALIVE_SUBJECT_CHAR = '^';
     protected static final String AGENT_SUBJECT_PREFIX = "nimrod.agent.";
+    protected static final String BROKER_SUBJECT_PREFIX = "0.";
     protected static final String INITIAL_VALUES_SUFFIX = "initialValues";
     protected static final String INSTANCE_SUFFIX = "instance";
     protected static final String IPC_TIME_SUFFIX = "ipctime";

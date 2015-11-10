@@ -2,15 +2,15 @@
 <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
 <stringAttribute key="bad_container_name" value="/nimrod-ipcc/runConfig"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/nimrod-ipc/src/test/java/com/nimrodtechs/TestClientMultithread.java"/>
+<listEntry value="/nimrod-ipc/src/test/java/com/nimrodtechs/TestPublisher.java"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
 <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
 <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.m2e.launchconfig.classpathProvider"/>
-<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.nimrodtechs.TestClientMultithread"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.nimrodtechs.TestPublisher"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="nimrod-ipc"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.m2e.launchconfig.sourcepathProvider"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-DrmiServerSocketUrl=tcp://localhost:8777"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-DrmiServerSocketUrl=tcp://*:8778&#10;-DzeroMQAgentInboundSocketUrl=tcp://localhost:8775&#10;-DzeroMQAgentOutboundSocketUrl=tcp://localhost:8776"/>
 </launchConfiguration>
