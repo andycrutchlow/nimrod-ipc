@@ -210,7 +210,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         // Publish message to trigger lastValueCache publish for subject
         if (wildcard == false && subject.startsWith(AGENT_SUBJECT_PREFIX) == false && agentPublisher != null) {
             agentPublisher.publish(AGENT_SUBJECT_PREFIX+INITIAL_VALUES_SUFFIX, subject);
-            logger.info("requested initial values for " + subject);
+            logger.debug("requested initial values for " + subject);
         }
 
     }
@@ -239,14 +239,14 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
             // find the listener in the list thru iterator and remove...
             for (ListIterator<MessageReceiverInterface> itr = list.listIterator(); itr.hasNext();) {
                 if (itr.next() == listener) {
-                    logger.warn("unsubscribe : subject [" + subject + "] removing listener " + listener);
+                    logger.debug("unsubscribe : subject [" + subject + "] removing listener " + listener);
                     itr.remove();
                     break;
                 }
             }
             // list.remove(listener);
             if (list.size() == 0) {
-                logger.info("unsubscribe : subject [" + subject + "] listener count is now 0 so remove from map");
+                logger.debug("unsubscribe : subject [" + subject + "] listener count is now 0 so remove from map");
                 // Do the actual unsubscribe from transport
                 if (listenersBySubjectMap.remove(subject) == null)
                     logger.warn("unsubscribe : subject [" + subject + "] count was 0 but entry missing");
@@ -277,7 +277,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
             // subscription
             setupLock.unlock();
         }
-        logger.info("transport subscribe : first subscription for subject " + subject);
+        logger.debug("transport subscribe : first subscription for subject " + subject);
         // Its the first occurance of this subject so tell
         // SubscriberThreadHandler to add the subscription..
         Socket client;
@@ -291,11 +291,11 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         // subscription..
         client.send("ADD".getBytes(), ZMQ.SNDMORE);
         client.send(subject.getBytes(), 0);
-        logger.info("subscribe : sent ADD message for subject " + subject);
+        logger.debug("subscribe : sent ADD message for subject " + subject);
         // Receive the acknowledgement
         //TODO ... need a timeout here inncase it never returns!!!!
         client.recv(0);
-        logger.info("subscribe : recvd ack for subject " + subject);
+        logger.debug("subscribe : recvd ack for subject " + subject);
         client.close();
     }
 
@@ -306,7 +306,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
      * 
      */
     private void unsubscribe(String subject) {
-        logger.info("unsubscribe : subject [" + subject + "] count is now 0 so actually unsubscribe");
+        logger.debug("unsubscribe : subject [" + subject + "] count is now 0 so actually unsubscribe");
         // If there are now more listeners then remove all aspects of
         // the subscription
         Socket client;
@@ -322,7 +322,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
         client.send(subject.getBytes(), 0);
         // Receive the ack
         client.recv(0);
-        logger.info("unsubscribe : recvd ack for REMOVE subject [" + subject + "]");
+        logger.debug("unsubscribe : recvd ack for REMOVE subject [" + subject + "]");
         client.close();
     }
 
@@ -395,10 +395,10 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
                         byte[] subject = internalSocket.recv(0);
                         if (addOrRemove.equals("ADD")) {
                             externalSocket.subscribe(subject);
-                            logger.info("ADDED subscription [" + new String(subject) + "]");
+                            logger.debug("ADDED subscription [" + new String(subject) + "]");
                         } else if (addOrRemove.equals("REMOVE")) {
                             externalSocket.unsubscribe(subject);
-                            logger.info("REMOVED subscription [" + new String(subject) + "]");
+                            logger.debug("REMOVED subscription [" + new String(subject) + "]");
                         } else {
                             logger.info("UNKNOWN command [" + addOrRemove + "]");
                         }
@@ -407,7 +407,7 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
                     internalSocket.send(firstFrame, ZMQ.SNDMORE);
                     internalSocket.send(secondFrameEmpty, ZMQ.SNDMORE);
                     internalSocket.send("ACK".getBytes(), 0);
-                    logger.info("SubscriberThreadHandler send ack for " + addOrRemove);
+                    logger.debug("SubscriberThreadHandler send ack for " + addOrRemove);
                     if (addOrRemove.equals("STOP"))
                         break;
                 }

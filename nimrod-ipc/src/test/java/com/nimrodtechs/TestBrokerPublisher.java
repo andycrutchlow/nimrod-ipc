@@ -16,14 +16,9 @@
 
 package com.nimrodtechs;
 
-import com.nimrodtechs.ipc.InstanceEventReceiverInterface;
-import com.nimrodtechs.ipc.ZeroMQCommon;
-import com.nimrodtechs.ipc.ZeroMQPubSubPublisher;
 import com.nimrodtechs.ipc.ZeroMQPubSubPublisherViaBroker;
-import com.nimrodtechs.serialization.NimrodObjectSerializer;
-import com.nimrodtechs.serialization.kryo.KryoSerializer;
 
-public class TestBrokerPublisher implements InstanceEventReceiverInterface {
+public class TestBrokerPublisher  {
     static ZeroMQPubSubPublisherViaBroker publisher;
     static TestBrokerPublisher instance = new TestBrokerPublisher();
 
@@ -35,10 +30,6 @@ public class TestBrokerPublisher implements InstanceEventReceiverInterface {
                     publisher.dispose();
             }
         });
-        // Configure the general serializer by adding a kryo serializer
-        //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo", new KryoSerializer());
-        // Add event listener that will be called (if agent is running) when subscriber 'TestSubscriber' is started
-        ZeroMQCommon.addInstanceEventReceiver("TestSubscriber", instance);
         publisher = new ZeroMQPubSubPublisherViaBroker();
         publisher.setServerSocket(System.getProperty("zeroMQBrokerInboundSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQBrokerInboundSocketUrl.pubsub"));
         publisher.setInstanceName("testpublisher");
@@ -46,8 +37,6 @@ public class TestBrokerPublisher implements InstanceEventReceiverInterface {
             // Initialize
             publisher.initialize();
             for (int i = 0; i < 1000; i++) {
-                //publisher.publish("testsubject", "testmessage");
-                //publisher.publish("testsubject2", "testmessage2");
             	TestDTO t = new TestDTO();
             	t.setField1("HELLO");
             	t.setField2(i);
@@ -58,17 +47,7 @@ public class TestBrokerPublisher implements InstanceEventReceiverInterface {
             publisher.dispose();
 
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
-    }
-
-    @Override
-    public void instanceEvent(String instanceName, String instanceUrl, int instanceStatus) {
-        if(instanceStatus == 0)
-            System.out.println("instanceName=["+instanceName+"] instanceUrl=["+instanceUrl+"] status=["+instanceStatus+"] is now running");
-        else if(instanceStatus == 1)
-            System.out.println("instanceName=["+instanceName+"] instanceUrl=["+instanceUrl+"] status=["+instanceStatus+"] has stopped");
     }
 }

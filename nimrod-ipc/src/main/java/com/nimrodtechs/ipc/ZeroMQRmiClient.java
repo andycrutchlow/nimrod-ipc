@@ -35,9 +35,12 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.commons.pool.BasePoolableObjectFactory;
-import org.apache.commons.pool.ObjectPool;
-import org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.commons.pool2.BasePooledObjectFactory;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
+import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
@@ -95,10 +98,10 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
    
     private AtomicLong inprocThreadId = new AtomicLong(1);
     private AtomicLong seqNo = new AtomicLong(0);
-    private ObjectPool inprocPool = null;
+    private GenericObjectPool<InprocConnection> inprocPool = null;
     private int finalPoolSize;
-    //private int inprocPoolSize = Runtime.getRuntime().availableProcessors() / 2;
-    private int inprocPoolSize = 16;
+    private int inprocPoolSize = Runtime.getRuntime().availableProcessors() / 2;
+    //private int inprocPoolSize = 16;
     
     class CallingMetric {
         String currentServiceAndMethodName;
@@ -132,7 +135,9 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
         long currentCallTimeTaken;
     }
 
-    class PoolConnectionFactory extends BasePoolableObjectFactory {
+    GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+    int count;
+    class PoolConnectionFactory extends BasePooledObjectFactory<InprocConnection> {
         Context context;
 
         public PoolConnectionFactory(Context context) {
@@ -140,7 +145,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
         }
 
         // Create InprocConnection with thread waiting for some input
-        public InprocConnection makeObject() throws Exception {
+        public InprocConnection create() throws Exception {
             final InprocConnection inprocConnection = new InprocConnection();
             try {
                 inprocConnection.task = new SendAndReceiveTask(inprocConnection);
@@ -158,6 +163,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
             // to the pool can provide it back to caller
             // logger.info("Pool NumActive="+inprocPool.getNumActive()+" NumIdle="+inprocPool.getNumIdle());
             currentInprocConnections.add(inprocConnection);
+            logger.info("Created "+(++count)+" InprocConnections");
             return inprocConnection;
 
         }
@@ -186,6 +192,12 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
 
         }
 
+		@Override
+		public PooledObject<InprocConnection> wrap(InprocConnection inprocConnection) {
+			return new DefaultPooledObject<InprocConnection>(inprocConnection);
+
+		}
+
         // for all other methods, the no-op
         // implementation in BasePoolableObjectFactory
         // will suffice
@@ -199,6 +211,9 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
         if(super.initialize() == false)
             return false;
 
+        poolConfig.setBlockWhenExhausted(true);
+        poolConfig.setMaxTotal(inprocPoolSize);
+        
         logger.info("ZMQ Version : " + ZMQ.getFullVersion());
         internalSocketName = INTERNAL_SOCKET_NAME_PREFIX + "-"+getInstanceName()+"-" + thisInstanceId;
         zmqClientPumpThreadName = PUMP_PREFIX + getInstanceName() + "-" + thisInstanceId;
@@ -296,7 +311,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
                 // Set inproc pool and threads starting thread id back to 1
                 if (inprocPool == null) {
                     inprocThreadId.set(1);
-                    inprocPool = new GenericObjectPool(new PoolConnectionFactory(context), inprocPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1);
+                    inprocPool = new GenericObjectPool(new PoolConnectionFactory(context), poolConfig);
                 }
                 //TODO replace with : this.poller = new ZMQ.Poller(2);
                 this.poller = context.poller(2);
@@ -893,7 +908,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
                 if (inprocPool != null)
                     inprocPool.invalidateObject(inprocConnection);
             } catch (Exception e) {
-                logger.error("Exception freeing inprocConnection", e);
+                //logger.error("Exception freeing inprocConnection", e);
             }
             logger.info("Thread " + inprocConnection.name + " terminated...InprocSocket closed");
         }
@@ -1015,7 +1030,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
                             logCnt = 0;
                             if (inprocPool == null) {
                                 inprocThreadId.set(1);
-                                inprocPool = new GenericObjectPool(new PoolConnectionFactory(context), inprocPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1);
+                                inprocPool = new GenericObjectPool(new PoolConnectionFactory(context), poolConfig);
                             }
                             // logger.info("Connection established");
                             notifyConnectionEstablished();

@@ -36,15 +36,11 @@ import com.nimrodtechs.ipc.ZeroMQPubSubSubscriber;
 	            }
 	        });
 
-	        //Configure the general serializer by adding a kryo serializer
-	        //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
 	        subscriber = new ZeroMQPubSubSubscriber();
 	        subscriber.setInstanceName("TestSubscriber");
 	        subscriber.setServerSocket(System.getProperty("zeroMQBrokerOutboundSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQBrokerOutboundSocketUrl.pubsub"));
 	        try {
 	            subscriber.initialize();
-	            //subscriber.subscribe("testsubject", new TestSubscriber(), String.class,QueueExecutor.CONFLATING_QUEUE);
-	            //subscriber.subscribe("testsubject2", new TestSubscriber(), String.class);
 	            subscriber.subscribe("testsubject3", new TestBrokerSubscriber(), TestDTO.class);
 	        } catch (Exception e) {
 	            // TODO Auto-generated catch block
@@ -54,11 +50,9 @@ import com.nimrodtechs.ipc.ZeroMQPubSubSubscriber;
 
 	    @Override
 	    public void messageReceived(String subject, Object message) {
-	    	if(message instanceof String)
-	    		logger.info("subject="+subject+" message="+message);
-	    	else if (message instanceof TestDTO) {
+	    	if (message instanceof TestDTO) {
 	    		TestDTO t = (TestDTO)message;
-	    		logger.info("subjectXX="+subject+" field1="+t.field1+" field2="+t.field2+" field3="+t.field3);
+	    		logger.info("subject="+subject+" field1="+t.field1+" field2="+t.field2+" field3="+t.field3);
 	    	}
 	        
 	    }

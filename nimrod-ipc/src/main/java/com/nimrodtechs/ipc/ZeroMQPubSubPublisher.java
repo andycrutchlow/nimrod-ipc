@@ -202,11 +202,16 @@ public class ZeroMQPubSubPublisher extends ZeroMQCommon {
         List<byte[]> fullMessage = new ArrayList<byte[]>();
         fullMessage.add(subject.getBytes());
         fullMessage.add(message);
-        if ( queue.remainingCapacity() < alertLevel )
-        {
-            // Alert that we are at 90% queue filled
-            logger.warn("Instance "+getInstanceName()+" at 90% queue filled :"+queue.remainingCapacity()+" left");
-        }
+//        if ( queue.remainingCapacity() < alertLevel )
+//        {
+//            // Alert that we are at 90% queue filled
+//            logger.warn("Instance "+getInstanceName()+" at 90% queue filled :"+queue.remainingCapacity()+" left");
+//        }
+//        if ( queue.remainingCapacity() < 2 )
+//        {
+//            // Alert that we are at 90% queue filled
+//            logger.warn("Instance "+getInstanceName()+" has "+queue.remainingCapacity()+" left");
+//        }
         try
         {
             queue.put(fullMessage);
