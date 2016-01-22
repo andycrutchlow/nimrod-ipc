@@ -99,7 +99,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
     private AtomicLong inprocThreadId = new AtomicLong(1);
     private AtomicLong seqNo = new AtomicLong(0);
     private GenericObjectPool<InprocConnection> inprocPool = null;
-    private int finalPoolSize;
+    //private int finalPoolSize;
     private int inprocPoolSize = Runtime.getRuntime().availableProcessors() / 2;
     //private int inprocPoolSize = 16;
     
@@ -311,7 +311,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
                 // Set inproc pool and threads starting thread id back to 1
                 if (inprocPool == null) {
                     inprocThreadId.set(1);
-                    inprocPool = new GenericObjectPool(new PoolConnectionFactory(context), poolConfig);
+                    inprocPool = new GenericObjectPool<InprocConnection>(new PoolConnectionFactory(context), poolConfig);
                 }
                 //TODO replace with : this.poller = new ZMQ.Poller(2);
                 this.poller = context.poller(2);
@@ -515,7 +515,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
             
         } catch (NimrodRmiRemoteException r) {
             Exception responseException = null;
-            Class exceptionClass = null;
+            Class<?> exceptionClass = null;
             //Try and deserialize the bytes describing the actual remote exception contained in the NimrodRmiRemoteException
             try {
                 exceptionClass = Class.forName(r.getRemoteExceptionName());
@@ -803,7 +803,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
                     // the original threadRequestId
                     while (keepRunningInnerLoop) {
                         byte[] frame1;
-                        byte[] frame2;
+                        //byte[] frame2;
                         try {
                             frame1 = inprocConnection.socket.recv(0);
                             inprocConnection.currentCallTimeTaken = System.nanoTime() - t1;
@@ -1030,7 +1030,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
                             logCnt = 0;
                             if (inprocPool == null) {
                                 inprocThreadId.set(1);
-                                inprocPool = new GenericObjectPool(new PoolConnectionFactory(context), poolConfig);
+                                inprocPool = new GenericObjectPool<InprocConnection>(new PoolConnectionFactory(context), poolConfig);
                             }
                             // logger.info("Connection established");
                             notifyConnectionEstablished();
