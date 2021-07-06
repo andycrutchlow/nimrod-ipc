@@ -100,8 +100,8 @@ public class TestServer {
             //
             e.printStackTrace();
         }
-        logger.info("rmiTestMethod1 called ["+param+"]");
-        return Thread.currentThread().getName()+" rmiTestMethod1 received msg ["+param+"] at "+new Date().toString()+" took "+delay+"ms";
+        logger.info("rmiTestMethod1 called with param ["+param+"] simulated work took "+delay+"ms");
+        return Thread.currentThread().getName()+" rmiTestMethod1 received msg ["+param+"] at "+new Date().toString()+" simulated work took "+delay+"ms";
    }
     
     @ExposedMethod
@@ -139,8 +139,8 @@ public class TestServer {
             //
             e.printStackTrace();
         }
-        logger.info("rmiTestMethod2 called ["+str1+"]");
-        return Thread.currentThread().getName()+" rmiTestMethod2 received msg ["+str1+"]"+"["+bd1+"]"+"["+str2+"] at "+new Date().toString()+" took "+delay+"ms";
+        logger.info("rmiTestMethod2 called ["+str1+"] simulated work took "+delay+"ms");
+        return Thread.currentThread().getName()+" rmiTestMethod2 received msg ["+str1+"]"+"["+bd1+"]"+"["+str2+"] at "+new Date().toString()+" simulated work took "+delay+"ms";
     }
     
 }

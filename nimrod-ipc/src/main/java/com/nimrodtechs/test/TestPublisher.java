@@ -37,7 +37,7 @@ public class TestPublisher implements InstanceEventReceiverInterface {
         // Add event listener that will be called (if agent is running) when subscriber 'TestSubscriber' is started
         ZeroMQCommon.addInstanceEventReceiver("TestSubscriber", instance);
         publisher = new ZeroMQPubSubPublisher();
-        publisher.setServerSocket(System.getProperty("rmiServerSocketUrl", "ipc://" + System.getProperty("java.io.tmpdir") + "/TestPublisherSocket.pubsub"));
+        publisher.setServerSocket(System.getProperty("publisherSocketUrl", "ipc://" + System.getProperty("java.io.tmpdir") + "/TestPublisherSocket.pubsub"));
         publisher.setInstanceName("testpublisher");
         try {
             // Initialize

@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestClientMultithread {
@@ -71,6 +72,7 @@ public class TestClientMultithread {
 	
 	class TestTask implements Runnable {
 	    public void run() {
+            Random r1 = new Random();
             try {
                 Thread.currentThread().setName("TestClientThread-"+count.getAndIncrement());
                 while(keepRunning) {
@@ -82,7 +84,16 @@ public class TestClientMultithread {
                     } catch (NimrodRmiNotConnectedException e) {
                         System.out.println("Server not detected .. try again");
                     }
-                    Thread.sleep(2000);
+                    long delay = 0;
+                    try {
+                        //Simulate some work with a random delay between 1 and 20 millis
+                        delay = r1.nextInt(999) + 1;
+                        Thread.sleep(delay);
+                    } catch (InterruptedException e) {
+                        //
+                        e.printStackTrace();
+                    }
+                    Thread.sleep(delay);
                 }
             } catch (InterruptedException e) {
                 //

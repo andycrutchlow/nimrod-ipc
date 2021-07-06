@@ -38,7 +38,7 @@ public class TestSubscriber implements MessageReceiverInterface {
         //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
         subscriber = new ZeroMQPubSubSubscriber();
         subscriber.setInstanceName("TestSubscriber");
-        subscriber.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestPublisherSocket.pubsub"));
+        subscriber.setServerSocket(System.getProperty("publisherSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestPublisherSocket.pubsub"));
         try {
             subscriber.initialize();
             //subscriber.subscribe("testsubject", new TestSubscriber(), String.class,QueueExecutor.CONFLATING_QUEUE);
