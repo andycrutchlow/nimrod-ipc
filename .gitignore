@@ -1,1 +1,27 @@
-nimrod-ipc/target
+**/target/
+target/
+.idea/*
+*.iml
+*.iws
+*.ipr
+.flattened-pom.xml
+*/.flattened-pom.xml
+
+# eclipse project file
+.settings/
+.classpath
+.project
+# External tool builders
+.externalToolBuilders/
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# OS
+.DS_Store
+
+# Misc
+*.swp
+release.properties
+pom.xml.releaseBackup
+pom.xml.tag
+/.metadata/
