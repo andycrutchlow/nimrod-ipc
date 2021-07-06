@@ -14,23 +14,20 @@
  * limitations under the License.
  */
 
-package com.nimrodtechs;
+package com.nimrodtechs.test;
+
+import com.nimrodtechs.annotations.ExposedMethod;
+import com.nimrodtechs.annotations.ExposedServiceName;
+import com.nimrodtechs.ipc.ZeroMQRmiServer;
+import com.nimrodtechs.serialization.NimrodObjectSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.nimrodtechs.annotations.ExposedMethod;
-import com.nimrodtechs.annotations.ExposedServiceName;
-import com.nimrodtechs.ipc.ZeroMQRmiClient;
-import com.nimrodtechs.ipc.ZeroMQRmiServer;
-import com.nimrodtechs.serialization.NimrodObjectSerializer;
-import com.nimrodtechs.serialization.kryo.KryoSerializer;
 
 @ExposedServiceName(serviceName = "ANDYTEST")
 public class TestServer {
@@ -60,7 +57,7 @@ public class TestServer {
             //Indicate that we are open for requests..this might be sometime later after more internal initialization is complete
             server.setEnabled(true);
        } catch (Exception e) {
-            // TODO Auto-generated catch block
+            //
             e.printStackTrace();
         }
     }
@@ -79,7 +76,7 @@ public class TestServer {
     public List<byte[]> rmiTestMethod1(List<byte[]> params) throws Exception {
         String serializerId = new String(params.get(0));
         //Get the first serialized parameter..which we know is a string
-        String param1 = (String)NimrodObjectSerializer.deserialize(serializerId, params.get(1), String.class);
+        String param1 = (String) NimrodObjectSerializer.deserialize(serializerId, params.get(1), String.class);
         //Call the actual method
         String result = rmiTestMethod1(param1);
         List<byte[]> resultArray = new ArrayList<byte[]>();
@@ -100,7 +97,7 @@ public class TestServer {
             delay = r1.nextInt(19) + 1;
             Thread.sleep(delay);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
+            //
             e.printStackTrace();
         }
         logger.info("rmiTestMethod1 called ["+param+"]");
@@ -111,11 +108,11 @@ public class TestServer {
     public List<byte[]> rmiTestMethod2(List<byte[]> params) throws Exception {
         String serializerId = new String(params.get(0));
         //Get the first serialized parameter..which we know is a string
-        String str1 = (String)NimrodObjectSerializer.deserialize(serializerId, params.get(1),String.class);
+        String str1 = (String) NimrodObjectSerializer.deserialize(serializerId, params.get(1),String.class);
         //Get the second serialized parameter..which we know is a BigDecimal
-        BigDecimal bd1 = (BigDecimal)NimrodObjectSerializer.deserialize(serializerId, params.get(2),BigDecimal.class);  
+        BigDecimal bd1 = (BigDecimal) NimrodObjectSerializer.deserialize(serializerId, params.get(2),BigDecimal.class);
         //Get the third serialized parameter..which we know is a String
-        String str2 = (String)NimrodObjectSerializer.deserialize(serializerId, params.get(3),String.class);
+        String str2 = (String) NimrodObjectSerializer.deserialize(serializerId, params.get(3),String.class);
         //Call the actual method
         String result = rmiTestMethod2(str1,bd1,str2);
         List<byte[]> resultArray = new ArrayList<byte[]>();
@@ -139,7 +136,7 @@ public class TestServer {
             delay = r2.nextInt(19) + 1;
             Thread.sleep(delay);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
+            //
             e.printStackTrace();
         }
         logger.info("rmiTestMethod2 called ["+str1+"]");

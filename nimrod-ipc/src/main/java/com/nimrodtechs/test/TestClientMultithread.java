@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package com.nimrodtechs;
-
-import java.math.BigDecimal;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package com.nimrodtechs.test;
 
 import com.nimrodtechs.exceptions.NimrodRmiNotConnectedException;
 import com.nimrodtechs.ipc.ZeroMQRmiClient;
-import com.nimrodtechs.serialization.NimrodObjectSerializer;
-import com.nimrodtechs.serialization.kryo.KryoSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestClientMultithread {
     final static Logger logger = LoggerFactory.getLogger(TestClientMultithread.class);
@@ -40,7 +37,7 @@ public class TestClientMultithread {
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
+                    //
                     e.printStackTrace();
                 }
                 if(testServerConnection != null)
@@ -55,7 +52,7 @@ public class TestClientMultithread {
         //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
         testServerConnection = new ZeroMQRmiClient();
         testServerConnection.setInstanceName("TestServerConnection");
-        testServerConnection.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/rmiServerSocket"));
+        testServerConnection.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestServerSocket.rmi"));
         try {
             testServerConnection.initialize();
             //kick of 10 threads running rmi test calling remote methods
@@ -65,7 +62,7 @@ public class TestClientMultithread {
             }
             
         } catch (Exception e) {
-            // TODO Auto-generated catch block
+            //
             e.printStackTrace();
         }
 	}
@@ -88,10 +85,10 @@ public class TestClientMultithread {
                     Thread.sleep(2000);
                 }
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
+                //
                 e.printStackTrace();
             } catch (Exception e) {
-                // TODO Auto-generated catch block
+                //
                 e.printStackTrace();
             }
 	    }

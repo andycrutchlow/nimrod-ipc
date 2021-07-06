@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package com.nimrodtechs;
-
-import java.math.BigDecimal;
-
-import ch.qos.logback.classic.Logger;
+package com.nimrodtechs.test;
 
 import com.nimrodtechs.exceptions.NimrodRmiNotConnectedException;
 import com.nimrodtechs.ipc.ZeroMQRmiClient;
-import com.nimrodtechs.serialization.NimrodObjectSerializer;
-import com.nimrodtechs.serialization.kryo.KryoSerializer;
+
+import java.math.BigDecimal;
 
 public class TestClient {
     static ZeroMQRmiClient testServerConnection;
@@ -43,7 +39,7 @@ public class TestClient {
         //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
         testServerConnection = new ZeroMQRmiClient();
         testServerConnection.setInstanceName("TestServerConnection");
-        testServerConnection.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/rmiServerSocket"));
+        testServerConnection.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestServerSocket.rmi"));
         try {
             testServerConnection.initialize();
             while(keepRunning) {
@@ -58,7 +54,7 @@ public class TestClient {
                 Thread.sleep(2000);
             }
         } catch (Exception e) {
-            // TODO Auto-generated catch block
+            //
             e.printStackTrace();
         }
         testServerConnection.dispose();

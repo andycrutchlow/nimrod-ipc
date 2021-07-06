@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package com.nimrodtechs;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package com.nimrodtechs.test;
 
 import com.nimrodtechs.ipc.MessageReceiverInterface;
 import com.nimrodtechs.ipc.ZeroMQPubSubSubscriber;
-import com.nimrodtechs.ipc.queue.QueueExecutor;
-import com.nimrodtechs.serialization.NimrodObjectSerializer;
-import com.nimrodtechs.serialization.kryo.KryoSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestSubscriber implements MessageReceiverInterface {
     final static Logger logger = LoggerFactory.getLogger(TestSubscriber.class);
@@ -49,7 +45,7 @@ public class TestSubscriber implements MessageReceiverInterface {
             //subscriber.subscribe("testsubject2", new TestSubscriber(), String.class);
             subscriber.subscribe("testsubject3", new TestSubscriber(), TestDTO.class);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
+            //
             e.printStackTrace();
         }
 	}

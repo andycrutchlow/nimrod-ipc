@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package com.nimrodtechs;
+package com.nimrodtechs.test;
 
 import com.nimrodtechs.ipc.InstanceEventReceiverInterface;
 import com.nimrodtechs.ipc.ZeroMQCommon;
 import com.nimrodtechs.ipc.ZeroMQPubSubPublisher;
-import com.nimrodtechs.serialization.NimrodObjectSerializer;
-import com.nimrodtechs.serialization.kryo.KryoSerializer;
 
 public class TestPublisher implements InstanceEventReceiverInterface {
     static ZeroMQPubSubPublisher publisher;
@@ -57,7 +55,7 @@ public class TestPublisher implements InstanceEventReceiverInterface {
             publisher.dispose();
 
         } catch (Exception e) {
-            // TODO Auto-generated catch block
+            //
             e.printStackTrace();
         }
 
