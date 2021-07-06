@@ -16,137 +16,147 @@
 
 package com.nimrodtechs.serialization.kryo;
 
-import java.io.ByteArrayInputStream;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.io.UnsafeInput;
+import com.esotericsoftware.kryo.io.UnsafeOutput;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
+import com.nimrodtechs.serialization.NimrodObjectSerializationInterface;
+import org.hibernate.collection.internal.*;
+
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-import com.esotericsoftware.kryo.io.UnsafeMemoryInput;
-import com.esotericsoftware.kryo.io.UnsafeMemoryOutput;
-import com.nimrodtechs.serialization.NimrodObjectSerializationInterface;
-
+import java.util.*;
+import java.util.function.Consumer;
 
 public class KryoSerializer implements NimrodObjectSerializationInterface {
-    
-    //private Kryo kryo = new Kryo();
-    
-    private ThreadLocal<Kryo> kryos = new ThreadLocal<Kryo>() {
-        protected Kryo initialValue() {
-            Kryo kryo = new Kryo();
-            //kryo.setRegistrationRequired(true);
-            kryo.register( BigDecimal.class );
-            kryo.register( Date.class );
-            kryo.register( Class.class, new ClassSerializer() );
-            kryo.register( HashMap.class );
-            kryo.register( HashSet.class );
-            kryo.register( Boolean[].class );
-            kryo.register( Double[].class );
-            kryo.register( Float[].class );
-            kryo.register( Integer[].class );
-            kryo.register( Long[].class );
-            kryo.register( Short[].class );
-            kryo.register( String[].class );
-            kryo.register( Date[].class );
-            kryo.register( BigDecimal[].class );
-            kryo.register( BigInteger[].class );
-            kryo.register( Class[].class );
-            kryo.register( Object[].class );
-            kryo.register( ArrayList.class );
-            kryo.register( TreeMap.class );
-            kryo.register( boolean[].class );
-            kryo.register( double[].class );
-            kryo.register( float[].class );
-            kryo.register( int[].class );
-            kryo.register( long[].class );
-            kryo.register( short[].class );
-            kryo.register( byte[].class );
-            kryo.register( TreeSet.class );
 
-            //register extra stuff ..
-            
-            
-            
-            return kryo;
-        };
-    };
-    
+    private static final List<Consumer<Kryo>> KRYO_PLUGIN_HOOKS = new ArrayList<>();
+
+    private final ThreadLocal<KryoInfo> kryoInfos = ThreadLocal.withInitial(() -> {
+        Kryo kryo = new Kryo();
+        kryo.register(BigDecimal.class);
+        kryo.register(Date.class);
+        kryo.register(Class.class, new ClassSerializer());
+        kryo.register(HashMap.class);
+        kryo.register(HashSet.class);
+        kryo.register(Boolean[].class);
+        kryo.register(Double[].class);
+        kryo.register(Float[].class);
+        kryo.register(Integer[].class);
+        kryo.register(Long[].class);
+        kryo.register(Short[].class);
+        kryo.register(String[].class);
+        kryo.register(Date[].class);
+        kryo.register(BigDecimal[].class);
+        kryo.register(BigInteger[].class);
+        kryo.register(Class[].class);
+        kryo.register(Object[].class);
+        kryo.register(ArrayList.class);
+        kryo.register(TreeMap.class);
+        kryo.register(boolean[].class);
+        kryo.register(double[].class);
+        kryo.register(float[].class);
+        kryo.register(int[].class);
+        kryo.register(long[].class);
+        kryo.register(short[].class);
+        kryo.register(byte[].class);
+        kryo.register(TreeSet.class);
+        KRYO_PLUGIN_HOOKS.forEach(kryoConsumer -> kryoConsumer.accept(kryo));
+        //Optionally add hibernate collection classes if hibernate on classpath
+        try {
+            kryo.addDefaultSerializer(PersistentIdentifierBag.class, new FieldSerializer(kryo, PersistentIdentifierBag.class));
+            kryo.addDefaultSerializer(PersistentBag.class, new FieldSerializer(kryo, PersistentBag.class));
+            kryo.addDefaultSerializer(PersistentList.class, new FieldSerializer(kryo, PersistentList.class));
+            kryo.addDefaultSerializer(PersistentSet.class, new FieldSerializer(kryo, PersistentSet.class));
+            kryo.addDefaultSerializer(PersistentMap.class, new FieldSerializer(kryo, PersistentMap.class));
+            kryo.addDefaultSerializer(PersistentSortedMap.class, new FieldSerializer(kryo, PersistentSortedMap.class));
+            kryo.addDefaultSerializer(PersistentSortedSet.class, new FieldSerializer(kryo, PersistentSortedSet.class));
+        } catch (NoClassDefFoundError e) {
+            //Don't care ...just means hibernate entities containing collection classes can't be deserialized
+
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        return new KryoInfo(
+                kryo,
+                outputStream,
+                new UnsafeOutput(outputStream),
+                new UnsafeInput()
+        );
+    });
+
+    private static class KryoInfo {
+
+        private final Kryo kryo;
+        private final ByteArrayOutputStream outputStream;
+        private final Output output;
+        private final Input input;
+
+        KryoInfo(
+                final Kryo kryo,
+                final ByteArrayOutputStream outputStream,
+                final Output output,
+                final Input input
+        ) {
+            this.kryo = kryo;
+            this.outputStream = outputStream;
+            this.output = output;
+            this.input = input;
+        }
+    }
+
     public KryoSerializer() {
-        super();
-//        kryo.setRegistrationRequired(true);
-//        kryo.register( BigDecimal.class );
-//        kryo.register( Date.class );
-//        kryo.register( Class.class, new ClassSerializer() );
-//        kryo.register( HashMap.class );
-//        kryo.register( HashSet.class );
-//        kryo.register( Boolean[].class );
-//        kryo.register( Double[].class );
-//        kryo.register( Float[].class );
-//        kryo.register( Integer[].class );
-//        kryo.register( Long[].class );
-//        kryo.register( Short[].class );
-//        kryo.register( String[].class );
-//        kryo.register( Date[].class );
-//        kryo.register( BigDecimal[].class );
-//        kryo.register( BigInteger[].class );
-//        kryo.register( Class[].class );
-//        kryo.register( Object[].class );
-//        kryo.register( ArrayList.class );
-//        kryo.register( TreeMap.class );
-//        kryo.register( boolean[].class );
-//        kryo.register( double[].class );
-//        kryo.register( float[].class );
-//        kryo.register( int[].class );
-//        kryo.register( long[].class );
-//        kryo.register( short[].class );
-//        kryo.register( byte[].class );
-//        kryo.register( TreeSet.class );
     }
 
-    public byte[] serialize(Object o) {
-    	
-    	Kryo kryo = kryos.get();
-    	
-    	if(o instanceof String) {
-    		return ((String)o).getBytes();
-    	} else {
-    		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-    		//Output output = new Output(stream);
-    		UnsafeMemoryOutput output = new UnsafeMemoryOutput(stream);
-    		kryo.writeObject(output, o);
-    		output.close();
-    		return stream.toByteArray();
-    	}
+    public static void addKryoPluginHook(final Consumer<Kryo> pluginHook) {
+        KRYO_PLUGIN_HOOKS.add(pluginHook);
     }
 
-    public Object deserialize(byte[] b, Class c) {
-    	Kryo kryo = kryos.get();
-    	if(c.isInstance("") ) {
-    		return new String(b);
-    	} else {
-    		ByteArrayInputStream stream = new ByteArrayInputStream(b);
-    		//Input input = new Input(stream);
-    		UnsafeMemoryInput input = new UnsafeMemoryInput(stream);
-    		Object result = kryo.readObject(input, c);
-    		input.close();
-    		return result;
-    	}
-     }
-    public void register(Class c, int id) {
-//    	kryo.register(c, id);
+    public byte[] serialize(final Object object) {
+        if (object instanceof String) {
+            return ((String) object).getBytes();
+        }
+        else {
+            final KryoInfo kryoInfo = kryoInfos.get();
+            final Kryo kryo = kryoInfo.kryo;
+            final Output output = kryoInfo.output;
+            final ByteArrayOutputStream outputStream = kryoInfo.outputStream;
+            output.clear();
+            outputStream.reset();
+
+            if (object == null) {
+                kryo.writeObject(output, Kryo.NULL);
+            }
+            else {
+                kryo.writeObjectOrNull(output, object, object.getClass());
+            }
+            output.flush();
+            return outputStream.toByteArray();
+        }
     }
-    public void register(Class c, Object object, int id) {
-//    	Serializer serializer = (Serializer)object;
- //   	kryo.register(c, serializer, id);
+
+    @SuppressWarnings("unchecked")
+    public <T> T deserialize(final byte[] inputBytes, final Class<T> tClass) {
+        if (String.class.equals(tClass)) {
+            return (T) new String(inputBytes);
+        }
+        else {
+            final KryoInfo kryoInfo = kryoInfos.get();
+            final Kryo kryo = kryoInfo.kryo;
+            final Input input = kryoInfo.input;
+            input.setBuffer(inputBytes);
+            return kryo.readObjectOrNull(input, tClass);
+        }
+    }
+
+    @Override
+    public void register(final Class c, final int id) {
+    }
+
+    @Override
+    public void register(final Class c, final Object serializer, final int id) {
     }
 }

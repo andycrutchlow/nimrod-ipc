@@ -19,9 +19,6 @@ package com.nimrodtechs.ipc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.nimrodtechs.serialization.NimrodObjectSerializer;
-import com.nimrodtechs.serialization.kryo.KryoSerializer;
-
 /**
  * Optional broker process that can be run to provide a brokered centralized distribution of published messages.
  * The main difference is that subscriber processes can subscribe to one place to receive all possible published messages rather than
@@ -31,62 +28,62 @@ import com.nimrodtechs.serialization.kryo.KryoSerializer;
  * At least two sockets are required for this operation. They are domain specific and need to be on
  * 'well-known' locations that all other processes that want to participate will know about.
  * i.e. the participants are configured with these well known values.
- * @author andy
  *
+ * @author andy
  */
 public class ZeroMQBroker implements MessageReceiverInterface {
-    private static Logger logger = LoggerFactory.getLogger(ZeroMQBroker.class);
-    private static ZeroMQBroker zeroMQBroker = null;
-    static ZeroMQPubSubSubscriber subscriber;
-    static ZeroMQPubSubPublisher publisher;
-    public static void main(String[] args) {
-        //Register a shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                if(zeroMQBroker != null)
-                    zeroMQBroker.dispose();
-            }
-        });
-        
-        //Configure the general serializer by adding a kryo serializer
-        //NimrodObjectSerializer.GetInstance().getSerializers().put(NimrodObjectSerializer.DEFAULT_SERIALIZATION_ID,new KryoSerializer());
-        try {
-            zeroMQBroker = new ZeroMQBroker();
-            
-            publisher = new ZeroMQPubSubPublisher();
-            publisher.setServerSocket(System.getProperty("zeroMQBrokerOutboundSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQBrokerOutboundSocketUrl.pubsub"));
-            publisher.setInstanceName("brokerPublisher");
-            publisher.initialize();
-            
-            subscriber = new ZeroMQPubSubSubscriber();
-            subscriber.setInstanceName("brokerSubscriber");
-            subscriber.setServerSocket(System.getProperty("zeroMQBrokerInboundSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQBrokerInboundSocketUrl.pubsub"));
-            subscriber.setManyToOne(true);
-            subscriber.initialize();
-            //Subscribe to all broker messages
-            subscriber.subscribe(ZeroMQCommon.BROKER_SUBJECT_PREFIX+"*", zeroMQBroker, byte[].class);
-        } catch (Exception e) {
-            logger.error("Error starting ZeroMQBroker .. shutting down.",e);
-            if(zeroMQBroker != null)
-                zeroMQBroker.dispose();
-        }
+	static ZeroMQPubSubSubscriber subscriber;
+	static ZeroMQPubSubPublisher publisher;
+	private static Logger logger = LoggerFactory.getLogger(ZeroMQBroker.class);
+	private static ZeroMQBroker zeroMQBroker = null;
+
+	public static void main(String[] args) {
+		//Register a shutdown hook
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			if (zeroMQBroker != null)
+				zeroMQBroker.dispose();
+		}));
+
+		//Configure the general serializer by adding a kryo serializer
+		//NimrodObjectSerializer.GetInstance().getSerializers().put(NimrodObjectSerializer.DEFAULT_SERIALIZATION_ID,new KryoSerializer());
+		try {
+			zeroMQBroker = new ZeroMQBroker();
+
+			publisher = new ZeroMQPubSubPublisher();
+			publisher.setServerSocket(System.getProperty("zeroMQBrokerOutboundSocketUrl", "ipc://" + System.getProperty("java.io.tmpdir") + "/zeroMQBrokerOutboundSocketUrl.pubsub"));
+			publisher.setInstanceName("brokerPublisher");
+			publisher.initialize();
+
+			subscriber = new ZeroMQPubSubSubscriber();
+			subscriber.setInstanceName("brokerSubscriber");
+			subscriber.setServerSocket(System.getProperty("zeroMQBrokerInboundSocketUrl", "ipc://" + System.getProperty("java.io.tmpdir") + "/zeroMQBrokerInboundSocketUrl.pubsub"));
+			subscriber.setManyToOne(true);
+			subscriber.initialize();
+			//Subscribe to all broker messages
+			subscriber.subscribe(ZeroMQCommon.BROKER_SUBJECT_PREFIX + "*", zeroMQBroker, byte[].class);
+		}
+		catch (Exception e) {
+			logger.error("Error starting ZeroMQBroker .. shutting down.", e);
+			if (zeroMQBroker != null)
+				zeroMQBroker.dispose();
+		}
 
 
-    }
+	}
 
-    void dispose() {
-        if(subscriber != null) {
-            subscriber.dispose();
-        }
-        if(publisher != null) {
-            publisher.dispose();
-        }
-        logger.info("ZeroMQBroker .. shutdown.");
-    }
+	void dispose() {
+		if (subscriber != null) {
+			subscriber.dispose();
+		}
+		if (publisher != null) {
+			publisher.dispose();
+		}
+		logger.info("ZeroMQBroker .. shutdown.");
+	}
 
-    @Override
-    public void messageReceived(String subject, Object message) {
-        //logger.info("subject=["+subject+"] message=["+message+"]");
-        publisher.publish(subject.substring(2), message);
-    }
+	@Override
+	public void messageReceived(String subject, Object message) {
+		//logger.info("subject=["+subject+"] message=["+message+"]");
+		publisher.publish(subject.substring(2), message);
+	}
 }

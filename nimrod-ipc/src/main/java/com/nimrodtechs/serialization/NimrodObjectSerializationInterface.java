@@ -19,10 +19,11 @@ package com.nimrodtechs.serialization;
 import com.nimrodtechs.exceptions.NimrodSerializationException;
 
 public interface NimrodObjectSerializationInterface {
-    public byte[] serialize(Object o);
-    
-    public Object deserialize(byte[] b, Class c) throws NimrodSerializationException;
-    
-    public void register(Class c, int id);
-    public void register(Class c, Object serializer, int id);
+    byte[] serialize(Object o);
+
+    <T> T deserialize(byte[] b, Class<T> c) throws NimrodSerializationException;
+
+    void register(Class c, int id);
+
+    void register(Class c, Object serializer, int id);
 }

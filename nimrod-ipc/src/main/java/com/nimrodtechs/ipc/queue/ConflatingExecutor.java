@@ -16,10 +16,10 @@
 
 package com.nimrodtechs.ipc.queue;
 
+import com.nimrodtechs.ipc.MessageReceiverInterface;
+
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
-
-import com.nimrodtechs.ipc.MessageReceiverInterface;
 
 /**
  * There should never be more than 2 entries in a queue...the one being worked
@@ -28,9 +28,8 @@ import com.nimrodtechs.ipc.MessageReceiverInterface;
  * a new thread if there is no current thread for the subject.
  * Note : a wildcard subscription will be processed in one queue therefore will be subject to conflation, which might not be what
  * you actually want.
- * 
- * @author andy
  *
+ * @author andy
  */
 public class ConflatingExecutor extends QueueExecutor {
     @Override
@@ -43,7 +42,8 @@ public class ConflatingExecutor extends QueueExecutor {
             mpe.conflatedMessages[1] = null;
             // A current thread is not inprogress so start one
             serviceThreads.execute(new ServiceMessageTask(subject, mpe, listeners));
-        } else {
+        }
+        else {
             // Either slot 0 or 1 is free...
             if (mpe.conflatedMessages[0] == null)
                 mpe.conflatedMessages[0] = new MessageWrapper(actualSubject, message);

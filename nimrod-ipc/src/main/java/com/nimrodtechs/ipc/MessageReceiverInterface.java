@@ -16,6 +16,6 @@
 
 package com.nimrodtechs.ipc;
 
-public interface MessageReceiverInterface {
-    public void messageReceived(String subject, Object message);
+public interface MessageReceiverInterface<T> {
+    void messageReceived(String subject, T message);
 }

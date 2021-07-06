@@ -18,16 +18,18 @@ package com.nimrodtechs.ipc.queue;
 
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MessageProcessorEntry {
     protected AtomicBoolean inProgressIndicator = new AtomicBoolean(false);
     //protected Queue<MessageWrapper> messages = new ConcurrentLinkedQueue<MessageWrapper>();
-    protected Queue<MessageWrapper> messages = new ArrayBlockingQueue<MessageWrapper>(QueueExecutor.MAX_QUEUE);
+    protected Queue<MessageWrapper> messages = new ArrayBlockingQueue<>(QueueExecutor.MAX_QUEUE);
     protected MessageWrapper[] conflatedMessages = new MessageWrapper[2];
     protected QueueExecutor queueExecutor;
     protected String serviceName;
+    protected Class<?> payloadClass;
+    protected String serializationFormatId;
+    protected boolean wildcardSubscription = false;
 
     public String getServiceName() {
         return serviceName;
@@ -37,8 +39,6 @@ public class MessageProcessorEntry {
         this.serviceName = serviceName;
     }
 
-    protected Class<?> payloadClass;
-
     public Class<?> getPayloadClass() {
         return payloadClass;
     }
@@ -47,8 +47,6 @@ public class MessageProcessorEntry {
         this.payloadClass = payloadClass;
     }
 
-    protected String serializationFormatId;
-
     public String getSerializationFormatId() {
         return serializationFormatId;
     }
@@ -56,8 +54,6 @@ public class MessageProcessorEntry {
     public void setSerializationFormatId(String serializationFormatId) {
         this.serializationFormatId = serializationFormatId;
     }
-
-    protected boolean wildcardSubscription = false;
 
     public boolean isWildcardSubscription() {
         return wildcardSubscription;

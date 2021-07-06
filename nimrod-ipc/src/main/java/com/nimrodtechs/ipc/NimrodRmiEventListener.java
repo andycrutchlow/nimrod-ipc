@@ -17,13 +17,12 @@
 package com.nimrodtechs.ipc;
 
 
-
 /**
  * @author andy
- *
  */
 public interface NimrodRmiEventListener {
-    public void onBreakInConnection(ZeroMQRmiClient transport);
-    public void onConnectionEstablished(ZeroMQRmiClient transport);
+	public void onBreakInConnection(ZeroMQRmiClient transport);
+
+	public void onConnectionEstablished(ZeroMQRmiClient transport);
 
 }

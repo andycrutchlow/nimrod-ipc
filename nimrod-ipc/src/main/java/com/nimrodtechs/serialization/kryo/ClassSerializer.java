@@ -31,19 +31,21 @@ public class ClassSerializer extends Serializer {
     public Object read(Kryo arg0, Input input, Class arg2) {
         try {
             return Class.forName(input.readString());
-        } catch (Throwable t) {
+        }
+        catch (Throwable t) {
             try {
-                throw new RuntimeException("Unable to create Class " + input.readString(),t);
-            } catch (Throwable t1) {
-                throw new RuntimeException("Unable to create Class ",t);
+                throw new RuntimeException("Unable to create Class " + input.readString(), t);
+            }
+            catch (Throwable t1) {
+                throw new RuntimeException("Unable to create Class ", t);
             }
         }
     }
 
     @Override
     public void write(Kryo arg0, Output output, Object object) {
-        Class value = (Class)object;
+        Class value = (Class) object;
         output.writeString(value.getName());
-        
+
     }
 }
