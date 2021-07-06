@@ -43,8 +43,8 @@ public class TestPublisher implements InstanceEventReceiverInterface {
             // Initialize
             publisher.initialize();
             for (int i = 0; i < 1000; i++) {
-                //publisher.publish("testsubject", "testmessage");
-                //publisher.publish("testsubject2", "testmessage2");
+                publisher.publish("testsubject", "testmessage");
+                publisher.publish("testsubject2", "testmessage2");
             	TestDTO t = new TestDTO();
             	t.setField1("HELLO");
             	t.setField2(i);

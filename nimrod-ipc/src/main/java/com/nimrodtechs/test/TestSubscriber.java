@@ -21,6 +21,8 @@ import com.nimrodtechs.ipc.ZeroMQPubSubSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.nimrodtechs.ipc.queue.QueueExecutor;
+
 public class TestSubscriber implements MessageReceiverInterface {
     final static Logger logger = LoggerFactory.getLogger(TestSubscriber.class);
     static ZeroMQPubSubSubscriber subscriber;
@@ -41,8 +43,8 @@ public class TestSubscriber implements MessageReceiverInterface {
         subscriber.setServerSocket(System.getProperty("publisherSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestPublisherSocket.pubsub"));
         try {
             subscriber.initialize();
-            //subscriber.subscribe("testsubject", new TestSubscriber(), String.class,QueueExecutor.CONFLATING_QUEUE);
-            //subscriber.subscribe("testsubject2", new TestSubscriber(), String.class);
+            subscriber.subscribe("testsubject", new TestSubscriber(), String.class,QueueExecutor.CONFLATING_QUEUE);
+            subscriber.subscribe("testsubject2", new TestSubscriber(), String.class);
             subscriber.subscribe("testsubject3", new TestSubscriber(), TestDTO.class);
         } catch (Exception e) {
             //
