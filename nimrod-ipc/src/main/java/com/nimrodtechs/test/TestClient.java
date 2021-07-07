@@ -18,10 +18,13 @@ package com.nimrodtechs.test;
 
 import com.nimrodtechs.exceptions.NimrodRmiNotConnectedException;
 import com.nimrodtechs.ipc.ZeroMQRmiClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 
 public class TestClient {
+    private static Logger logger = LoggerFactory.getLogger(TestClient.class);
     static ZeroMQRmiClient testServerConnection;
     static boolean keepRunning = true;
     static BigDecimal bd = new BigDecimal("100.123");
@@ -45,9 +48,9 @@ public class TestClient {
             while(keepRunning) {
                 try {
                     String response = (String)testServerConnection.executeRmiMethod(String.class, "ANDYTEST","rmiTestMethod1", "hello");
-                    System.out.println("response = "+response);
+                    logger.info("response = "+response);
                     String response2 = (String)testServerConnection.executeRmiMethod(String.class, "ANDYTEST","rmiTestMethod2", "hello",bd, "there" );
-                    System.out.println("response2 = "+response2);
+                    logger.info("response2 = "+response2);
                 } catch (NimrodRmiNotConnectedException e) {
                     System.out.println("Server not detected .. try again");
                 }

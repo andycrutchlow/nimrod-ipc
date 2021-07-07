@@ -66,25 +66,6 @@
 			<artifactId>kryo</artifactId>
 			<version>3.0.0</version>
 		</dependency>
-		
-		<!-- NOTE : jzmq jars are specific to the native build so not available in external maven repositories.
-			Follow instructions at http://zeromq.org/bindings:java to make a suitable zmq.jar in the src/main/c++ folder.
-			Then, for example, for ubuntu and for zmq 3.2.2 rename file found src/main/c++/zmq.jar to jzmq-ubuntu-3.2.2.jar
-			and add to your local .m2 repository 
-			mvn install:install-file -Dfile=jzmq-ubuntu-3.2.2.jar -DgroupId=org.zeromq -DartifactId=jzmq-ubuntu -Dversion=3.2.2 -Dpackaging=jar
-		-->
-		<!--
-		<dependency>
-			<groupId>org.zeromq</groupId>
-			<artifactId>jzmq-ubuntu1410</artifactId>
-			<version>3.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.zeromq</groupId>
-			<artifactId>jeromq</artifactId>
-			<version>0.3.4</version>
-		</dependency>
-		-->
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
@@ -108,19 +89,18 @@
 				</dependency>
 			</dependencies>
 		</profile>
-		<!-- NOTE : jzmq jars are specific to the native build so not available in external maven repositories.
-    Follow instructions at http://zeromq.org/bindings:java to make a suitable zmq.jar in the src/main/c++ folder.
-    Then, for example, for ubuntu and for zmq 3.2.2 rename file found src/main/c++/zmq.jar to jzmq-ubuntu-3.2.2.jar
-    and add to your local .m2 repository
-    mvn install:install-file -Dfile=jzmq-ubuntu-3.2.2.jar -DgroupId=org.zeromq -DartifactId=jzmq-ubuntu -Dversion=3.2.2 -Dpackaging=jar
+		<!-- NOTE : to use native zeromq follow instructions at https://zeromq.org/download/ and https://zeromq.org/languages/java/#jzmq
+			to install native zeromq libraries and zeromq JNI libraries and
+			add org/zeromq/jzmq/3.1.1-SNAPSHOT/jzmq-3.1.1-SNAPSHOT.jar to your local maven repository and
+			add -Djava.library.path=/usr/local/lib to VM Params
 		-->
 		<profile>
 			<id>use-zeromq</id>
 			<dependencies>
 				<dependency>
 					<groupId>org.zeromq</groupId>
-					<artifactId>jzmq-ubuntu</artifactId>
-					<version>3.2.2</version>
+					<artifactId>jzmq</artifactId>
+					<version>3.1.1-SNAPSHOT</version>
 				</dependency>
 			</dependencies>
 		</profile>
