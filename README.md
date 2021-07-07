@@ -1,7 +1,8 @@
 nimrod-ipc
 ==========
 
-A simple API for interprocess communication for java using ZeroMQ.
+A simple API for interprocess communication for java using ZeroMQ. This can be either 'java-only' jeromq or with native executable zeromq.
+Recently tested against jeromq 0.5.2 (which is comaptible with zeromq 4.1.7) and native zeromq 4.3.4 and still seems to work.
 
 ZeroMQ supports many advanced messaging scenarios. This API covers two major use-cases which I find useful when developing enterprise/distributed applications whilst requiring minimal configuration and code to use these features :
 
@@ -24,10 +25,9 @@ Planned enhancements :
 2) Creating an annotation processor to allow annotations to be used directly on exposed methods on server side code to remove the need the boiler-plate code currently required to unmarshall the target RMI method parameters and wrap the actual target method on the server side and marshal back the response object. 
 
 Prerequisites :
-Native libraries for ZeroMQ built/installed and available to jvm via java.library.path. Similarly, native libraries for java bindings for ZeroMQ for the target deployment environment. Excellent documentation/instructions along with downloads are available at http://zeromq.org/intro:get-the-software and http://zeromq.org/bindings:java.
-I originally developed and tested against Stable Release 3.2.2. so download and build this version or as close as possible.
-In theory jeromq https://github.com/zeromq/jeromq should work also as an alternative to the native version, but I have yet to test to confirm.
-I have recently tested against Stable Release 4.0.4 and experienced some issues when running load with multithreading tests which failed and this is troublesome! I will be testing with 4.0.5 with the hope that this issues are addressed otherwise I will need to follow up with iMatrix.
+Using jeromq : None.
+Using zeromq : Native libraries for ZeroMQ and JNI need to be installed and available to jvm via java.library.path.
+See https://zeromq.org/download/ and https://zeromq.org/languages/java/#jzmq
 
 
 An explanation of the library name :
