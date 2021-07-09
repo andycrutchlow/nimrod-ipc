@@ -1,4 +1,4 @@
-package com.nimrodtechs.test;
+package com.nimrodtechs.demo;
 
 public class TestDTO {
 	public String getField1() {

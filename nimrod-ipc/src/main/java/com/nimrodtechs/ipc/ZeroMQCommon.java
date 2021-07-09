@@ -193,6 +193,9 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
 	public void setManyToOne(boolean manyToOne) throws Exception {
 		if (this instanceof ZeroMQPubSubSubscriber == false && this instanceof ZeroMQPubSubPublisher == false)
 			throw new NimrodPubSubException("setManyToOne only applicable for ZeroMQPubSubSubscriber or ZeroMQPubSubPublisher");
+		if(manyToOne == true && serverSocket != null) {
+			throw new NimrodPubSubException("setManyToOne true must be done before setting socket");
+		}
 		this.manyToOne = manyToOne;
 	}
 
@@ -255,7 +258,7 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
 	public void setServerSocket(String sockName) {
 		if (sockName != null) {
 			clientSocket = sockName;
-			if (sockName.startsWith("tcp://") && manyToOne == false) {
+			if (sockName.startsWith("tcp://") && (manyToOne == false || (this instanceof ZeroMQPubSubSubscriber && manyToOne == true))) {
 				String s1 = sockName.replace("tcp://", "");
 				String[] s2 = s1.split(":");
 				if (s2.length > 1) {
@@ -307,9 +310,9 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
 		if ((agentSubscriber != null || agentPublisher != null) && this instanceof ZeroMQRmiServer == false)
 			return;
 		if (instanceName.equals("agentSubscriber") == false && instanceName.equals("agentPublisher") == false && getZeroMQAgentOutboundSocketUrl() != null && getZeroMQAgentInboundSocketUrl() != null) {
-			if (this instanceof ZeroMQPubSubSubscriber == false) {
+			//if (this instanceof ZeroMQPubSubSubscriber == false) {
 				initializeAgentSubscriber();
-			}
+			//}
 			initializeAgentPublisher();
 			agentPublish(AGENT_SUBJECT_PREFIX + INSTANCE_SUFFIX, instanceName + "," + getServerSocket() + "," + InstanceEventReceiverInterface.INSTANCE_UP);
 		}

@@ -56,8 +56,8 @@ public class ZeroMQBroker implements MessageReceiverInterface {
 
 			subscriber = new ZeroMQPubSubSubscriber();
 			subscriber.setInstanceName("brokerSubscriber");
-			subscriber.setServerSocket(System.getProperty("zeroMQBrokerInboundSocketUrl", "ipc://" + System.getProperty("java.io.tmpdir") + "/zeroMQBrokerInboundSocketUrl.pubsub"));
 			subscriber.setManyToOne(true);
+			subscriber.setServerSocket(System.getProperty("zeroMQBrokerInboundSocketUrl", "ipc://" + System.getProperty("java.io.tmpdir") + "/zeroMQBrokerInboundSocketUrl.pubsub"));
 			subscriber.initialize();
 			//Subscribe to all broker messages
 			subscriber.subscribe(ZeroMQCommon.BROKER_SUBJECT_PREFIX + "*", zeroMQBroker, byte[].class);

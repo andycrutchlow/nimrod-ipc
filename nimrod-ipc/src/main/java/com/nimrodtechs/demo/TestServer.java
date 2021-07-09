@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.nimrodtechs.test;
+package com.nimrodtechs.demo;
 
 import com.nimrodtechs.annotations.ExposedMethod;
 import com.nimrodtechs.annotations.ExposedServiceName;
@@ -35,6 +35,10 @@ public class TestServer {
     static ZeroMQRmiServer server;
     
     public static void main(String[] args) {
+        if(args.length == 0) {
+            System.out.println("Provide argument which is describes the Socket that this publisher will publish on e.g. tcp://localhost:6062");
+            System.exit(0);
+        }
         //Register a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -49,9 +53,12 @@ public class TestServer {
         //Add an instance of this TestServer class as a service and its 2 associated exposed methods
         server.addExposedService(new TestServer());
         //Set the external socket that this rmi server is accessible on..default to unix domain socket located in tmp directory
-        server.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestServerSocket.rmi"));
+        //server.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestServerSocket.rmi"));
+        server.setServerSocket(args[0]);
         server.setInstanceName("testserver");
         try {
+            //Decide if we are using agent
+            //server.setUseAgent(true);
             //Initialize
             server.initialize();
             //Indicate that we are open for requests..this might be sometime later after more internal initialization is complete
@@ -66,7 +73,7 @@ public class TestServer {
      * This is boiler-plate wrapper around the actual call to actual method.
      * Its job is to understand and prepare the parameters, make the actual method call and then
      * prepare the return value.
-     * Want to turn this into generated code via annotation processor with annotation just being on the actual target method.
+     * TODO : turn this into generated code via annotation processor with annotation just being on the actual target method.
      * All the information should be available i.e. the parameter types and values, the actual method to call, the return type etc.
      * @param params
      * @return

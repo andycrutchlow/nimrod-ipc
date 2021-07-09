@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package com.nimrodtechs.test;
+package com.nimrodtechs.demo;
 
 import com.nimrodtechs.ipc.InstanceEventReceiverInterface;
 import com.nimrodtechs.ipc.ZeroMQCommon;
 import com.nimrodtechs.ipc.ZeroMQPubSubPublisher;
 
-public class TestPublisher implements InstanceEventReceiverInterface {
+public class TestPublisherBManyToOne implements InstanceEventReceiverInterface {
     static ZeroMQPubSubPublisher publisher;
-    static TestPublisher instance = new TestPublisher();
+    static TestPublisherBManyToOne instance = new TestPublisherBManyToOne();
 
     public static void main(String[] args) {
+        if(args.length == 0) {
+            System.out.println("Provide argument which is describes the common,single Socket that this manyToOne publisher will publish to e.g. tcp://localhost:6062");
+            System.exit(0);
+        }
         // Register a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -32,26 +36,39 @@ public class TestPublisher implements InstanceEventReceiverInterface {
                     publisher.dispose();
             }
         });
-        // Configure the general serializer by adding a kryo serializer
+        // If required configure a serializer. Default is already a kryo serializer
         //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo", new KryoSerializer());
-        // Add event listener that will be called (if agent is running) when subscriber 'TestSubscriber' is started
-        ZeroMQCommon.addInstanceEventReceiver("TestSubscriber", instance);
+
+        // Add an event listener that will be called (if agent is running) when a subscriber called 'TestSubscriberManyToOne' is started or stopped...
+        ZeroMQCommon.addInstanceEventReceiver("TestSubscriberManyToOne", instance);
+
+        //Setup the publisher using the socket description passed as an argument
         publisher = new ZeroMQPubSubPublisher();
-        publisher.setServerSocket(System.getProperty("publisherSocketUrl", "ipc://" + System.getProperty("java.io.tmpdir") + "/TestPublisherSocket.pubsub"));
-        publisher.setInstanceName("testpublisher");
+
         try {
+            publisher.setManyToOne(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        publisher.setServerSocket(args[0]);
+        publisher.setInstanceName("TestPublisherB");
+
+        try {
+            publisher.setUseAgent(true);
             // Initialize
             publisher.initialize();
+            //Loop to send some example messages
             for (int i = 0; i < 1000; i++) {
-                publisher.publish("testsubject", "testmessage");
-                publisher.publish("testsubject2", "testmessage2");
-            	TestDTO t = new TestDTO();
-            	t.setField1("HELLO");
-            	t.setField2(i);
-            	t.setField3(i);
-                publisher.publish("testsubject3", t);
+                //Examples which demonstrates publishing into a single receiver
+                TestDTO t2 = new TestDTO();
+                t2.setField1("From PublisherB");
+                t2.setField2(i);
+                t2.setField3(i);
+                publisher.publish("md.publisherB.EUR.USD", t2);
                 Thread.sleep(2000);
             }
+            //Finished
             publisher.dispose();
 
         } catch (Exception e) {

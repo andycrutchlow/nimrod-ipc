@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.nimrodtechs.test;
+package com.nimrodtechs.demo;
 
 import com.nimrodtechs.exceptions.NimrodRmiNotConnectedException;
 import com.nimrodtechs.ipc.ZeroMQRmiClient;
@@ -29,6 +29,10 @@ public class TestClient {
     static boolean keepRunning = true;
     static BigDecimal bd = new BigDecimal("100.123");
 	public static void main(String[] args) {
+        if(args.length == 0) {
+            System.out.println("Provide argument which is describes the Socket that this publisher will publish on e.g. tcp://localhost:6062");
+            System.exit(0);
+        }
 	  //Register a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -42,8 +46,10 @@ public class TestClient {
         //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
         testServerConnection = new ZeroMQRmiClient();
         testServerConnection.setInstanceName("TestServerConnection");
-        testServerConnection.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestServerSocket.rmi"));
+        //testServerConnection.setServerSocket(System.getProperty("rmiServerSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestServerSocket.rmi"));
+        testServerConnection.setServerSocket(args[0]);
         try {
+            //testServerConnection.setUseAgent(true);
             testServerConnection.initialize();
             while(keepRunning) {
                 try {

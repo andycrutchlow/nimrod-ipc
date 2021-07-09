@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.nimrodtechs.test;
+package com.nimrodtechs.demo;
 
 import com.nimrodtechs.ipc.ZeroMQPubSubPublisherViaBroker;
 

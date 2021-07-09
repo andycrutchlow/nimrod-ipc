@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package com.nimrodtechs.test;
+package com.nimrodtechs.demo;
 
 import com.nimrodtechs.ipc.MessageReceiverInterface;
 import com.nimrodtechs.ipc.ZeroMQPubSubSubscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.nimrodtechs.ipc.queue.QueueExecutor;
 
-public class TestSubscriber implements MessageReceiverInterface {
+public class TestBrokerSubscriber implements MessageReceiverInterface {
     final static Logger logger = LoggerFactory.getLogger(TestSubscriber.class);
     static ZeroMQPubSubSubscriber subscriber;
-    
-	public static void main(String[] args) {
-	  //Register a shutdown hook
+
+    public static void main(String[] args) {
+      //Register a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 if(subscriber != null)
@@ -36,31 +35,25 @@ public class TestSubscriber implements MessageReceiverInterface {
             }
         });
 
-        //Configure the general serializer by adding a kryo serializer
-        //NimrodObjectSerializer.GetInstance().getSerializers().put("kryo",new KryoSerializer());
         subscriber = new ZeroMQPubSubSubscriber();
         subscriber.setInstanceName("TestSubscriber");
-        subscriber.setServerSocket(System.getProperty("publisherSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/TestPublisherSocket.pubsub"));
+        subscriber.setServerSocket(System.getProperty("zeroMQBrokerOutboundSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQBrokerOutboundSocketUrl.pubsub"));
         try {
             subscriber.initialize();
-            subscriber.subscribe("testsubject", new TestSubscriber(), String.class,QueueExecutor.CONFLATING_QUEUE);
-            subscriber.subscribe("testsubject2", new TestSubscriber(), String.class);
-            subscriber.subscribe("testsubject3", new TestSubscriber(), TestDTO.class);
+            subscriber.subscribe("testsubject3", new TestBrokerSubscriber(), TestDTO.class);
         } catch (Exception e) {
             //
             e.printStackTrace();
         }
-	}
+    }
 
     @Override
     public void messageReceived(String subject, Object message) {
-    	if(message instanceof String)
-    		logger.info("subject="+subject+" message="+message);
-    	else if (message instanceof TestDTO) {
-    		TestDTO t = (TestDTO)message;
-    		logger.info("subject="+subject+" field1="+t.field1+" field2="+t.field2+" field3="+t.field3);
-    	}
-        
+        if (message instanceof TestDTO) {
+            TestDTO t = (TestDTO)message;
+            logger.info("subject="+subject+" field1="+t.field1+" field2="+t.field2+" field3="+t.field3);
+        }
+
     }
 
 }

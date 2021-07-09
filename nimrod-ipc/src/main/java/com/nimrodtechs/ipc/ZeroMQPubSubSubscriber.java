@@ -80,11 +80,11 @@ public class ZeroMQPubSubSubscriber extends ZeroMQCommon {
 
 			try {
 				if (manyToOne) {
-					externalSocket.bind(clientSocket);
+					externalSocket.bind(getServerSocket());
 					logger.info("manyToOne so bind to " + clientSocket);
 				}
 				else {
-					externalSocket.connect(clientSocket);
+					externalSocket.connect(getServerSocket());
 					logger.info("oneToMany so connect to " + clientSocket);
 				}
 			}

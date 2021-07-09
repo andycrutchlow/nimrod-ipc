@@ -794,6 +794,9 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
 //        ObjectName mxbeanName = new ObjectName("com.nimrodtechs:type=ZeroMQRmiClient");
 //        mbs.registerMBean(this, mxbeanName);
 
+		if (useAgent) {
+			initializeAgent();
+		}
 
 		//Indicates that subsequent calls to initialize is NOT the first time
 		isFirstTime = false;
