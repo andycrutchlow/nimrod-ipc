@@ -40,8 +40,8 @@ import java.util.Map;
  * @author nimrod
  */
 public abstract class ZeroMQCommon implements MessageReceiverInterface {
-	public static final String AGENT_INBOUND_SOCKET = "AGENT_INBOUND";
-	public static final String AGENT_OUTBOUND_SOCKET = "AGENT_OUTBOUND";
+	public static final String AGENT_INBOUND_SOCKET = "zeroMQAgentInboundSocketUrl";
+	public static final String AGENT_OUTBOUND_SOCKET = "zeroMQAgentOutboundSocketUrl";
 	public static final String AGENT_SUBJECT_PREFIX = "nimrod.agent.";
 	protected final static String INTERNAL_SOCKET_NAME_PREFIX = "inproc://inproc";
 	protected final static String SHUTDOWN_TASKNAME = "shutdowntask";

@@ -51,14 +51,14 @@ public class ZeroMQAgent implements MessageReceiverInterface {
             zeroMQAgent = new ZeroMQAgent();
             
             publisher = new ZeroMQPubSubPublisher();
-            publisher.setServerSocket(System.getProperty("zeroMQAgentOutboundSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQAgentOutboundSocketUrl.pubsub"));
+            publisher.setServerSocket(System.getProperty(ZeroMQCommon.AGENT_OUTBOUND_SOCKET,"ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQAgentOutboundSocketUrl.pubsub"));
             publisher.setInstanceName("agentPublisher");
             publisher.initialize();
             
             subscriber = new ZeroMQPubSubSubscriber();
             subscriber.setInstanceName("agentSubscriber");
             subscriber.setManyToOne(true);
-            subscriber.setServerSocket(System.getProperty("zeroMQAgentInboundSocketUrl","ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQAgentInboundSocketUrl.pubsub"));
+            subscriber.setServerSocket(System.getProperty(ZeroMQCommon.AGENT_INBOUND_SOCKET,"ipc://"+System.getProperty("java.io.tmpdir")+"/zeroMQAgentInboundSocketUrl.pubsub"));
             subscriber.initialize();
             //Subscribe to all agent messages
             subscriber.subscribe(ZeroMQCommon.AGENT_SUBJECT_PREFIX+"*", zeroMQAgent, String.class);
