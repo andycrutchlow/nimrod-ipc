@@ -546,7 +546,6 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
 					while (inprocConnection.socket.hasReceiveMore()) {
 						response.add(inprocConnection.socket.recv(0));
 					}
-					inprocConnection.queueOut.put(response);
 					// If that was a message saying lost connection to server
 					// then this thread should terminate...
 					if (response.size() == 2) {
@@ -562,6 +561,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
 					else if (response.size() == 0) {
 						logger.error("response.size() == 0 ...which is going to be intrepreted as a timeout!!");
 					}
+					inprocConnection.queueOut.put(response);
 
 				}
 				catch (Exception e) {
@@ -845,7 +845,7 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
 	}
 
 	/**
-	 * Convenience wrapper to assume the value of serializationId
+	 * Convenience wrapper to assume the value of serializationId, will wait indefinitely for response
 	 */
 	public <T> T executeRmiMethod(Class<T> responseClass, String serviceName, String methodName, Object... parameters) throws Exception {
 		//Assume this first entry in serializers is the default serializer
@@ -853,9 +853,9 @@ public class ZeroMQRmiClient extends ZeroMQCommon implements ZeroMQRmiClientMXBe
 	}
 
 	/**
-	 * Convenience wrapper to assume the value of serializationId
+	 * Convenience wrapper to assume the value of serializationId and provide a timeout
 	 */
-	public <T> T executeRmiMethod(Class<T> responseClass, String serviceName, String methodName, long timeout, Object... parameters) throws Exception {
+	public <T> T executeRmiMethodWithTimeout(long timeout, Class<T> responseClass, String serviceName, String methodName, Object... parameters) throws Exception {
 		//Assume this first entry in serializers is the default serializer
 		return executeRmiMethod(defaultSerializerId, responseClass, serviceName, methodName, timeout, parameters);
 	}
