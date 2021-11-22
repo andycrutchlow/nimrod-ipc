@@ -105,8 +105,19 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
 	protected boolean useAgent = false;
 	protected boolean alreadyDisposed = false;
 
+	/**
+	 * For now limit this number to 1 to 4
+	 * @return
+	 */
 	public static int GetDefaultThreadPoolSize() {
-		return (Runtime.getRuntime().availableProcessors() < 2 ? 1 : Runtime.getRuntime().availableProcessors() / 2);
+		int size = Runtime.getRuntime().availableProcessors();
+		if(size < 2) {
+			return 1;
+		} else if(size > 4) {
+			return 4;
+		} else {
+			return size / 2;
+		}
 	}
 
 	public static ZeroMQCommon getInstance(String name) {
@@ -258,7 +269,7 @@ public abstract class ZeroMQCommon implements MessageReceiverInterface {
 	public void setServerSocket(String sockName) {
 		if (sockName != null) {
 			clientSocket = sockName;
-			if (sockName.startsWith("tcp://") && (manyToOne == false || (this instanceof ZeroMQPubSubSubscriber && manyToOne == true))) {
+			if (sockName.startsWith("tcp://") && ((this instanceof ZeroMQRmiServer) || (this instanceof ZeroMQPubSubPublisher && manyToOne == false) || (this instanceof ZeroMQPubSubSubscriber && manyToOne == true))) {
 				String s1 = sockName.replace("tcp://", "");
 				String[] s2 = s1.split(":");
 				if (s2.length > 1) {
