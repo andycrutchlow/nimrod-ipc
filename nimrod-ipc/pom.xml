@@ -78,14 +78,12 @@
 	<profiles>
 		<profile>
 			<id>use-jeromq</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
 			<dependencies>
 				<dependency>
 					<groupId>org.zeromq</groupId>
 					<artifactId>jeromq</artifactId>
 					<version>0.5.2</version>
+					<scope>compile</scope>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -96,13 +94,60 @@
 		-->
 		<profile>
 			<id>use-zeromq</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
 			<dependencies>
 				<dependency>
 					<groupId>org.zeromq</groupId>
 					<artifactId>jzmq</artifactId>
 					<version>3.1.1-SNAPSHOT</version>
+					<scope>compile</scope>
 				</dependency>
 			</dependencies>
 		</profile>
 	</profiles>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<version>1.2.7</version>
+				<configuration>
+					<updatePomFile>
+						true
+					</updatePomFile>
+				</configuration>
+				<executions>
+					<execution>
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
