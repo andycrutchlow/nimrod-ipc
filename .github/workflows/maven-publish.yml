@@ -28,6 +28,7 @@ jobs:
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Build with Maven
+      working-directory: ./nimrod-ipc
       run: mvn -B package --file pom.xml
 
     - name: Publish to GitHub Packages Apache Maven
