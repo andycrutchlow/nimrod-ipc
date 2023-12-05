@@ -11,7 +11,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
-		<logback.version>1.2.3</logback.version>
+		<logback.version>1.2.13</logback.version>
 		<slf4j.version>1.7.7</slf4j.version>
 	</properties>
 
