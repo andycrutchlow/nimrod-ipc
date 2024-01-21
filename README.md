@@ -1,3 +1,5 @@
+Note : I have given up on ZeroMQ for now - was getting message dropping under extreme load. I have re-implemented API using Spring RSocket Reactive Streams and seems pretty good. See nimrod-ipc-rsock repo for more info.
+
 nimrod-ipc
 ==========
 
